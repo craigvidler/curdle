@@ -1,36 +1,48 @@
-target = 'coder'
-rounds = 6
+from random import choice
 
-for i in range(rounds):
+with open('data/guesses.txt') as g, open('data/answers.txt') as a:
+    guesses = set(g.read().splitlines())
+    answer = choice(a.read().splitlines())
+
+attempt = 1
+attempts = 6
+
+while attempt <= attempts:
 
     # Get input
-    guess = input(f'Guess #{i + 1}: ').lower()
+    guess = input(f'Attempt #{attempt}: ').lower()
+
+    if guess not in guesses:
+        print('Not a valid word')
+        continue
 
     # If all chars located correctly (all green)
-    if guess == target:
-        print('Word correct!')
+    if guess == answer:
+        print('Correct!')
         raise SystemExit()
 
-    # `target` cast to list as we want to delete found letters. Given target
+    # `answer` cast to list as we want to delete found letters. Given answer
     # of eg 'coder', deletion avoids eg the second 'e' in 'erase' wrongly
     # being marked yellow.
-    target_letters = list(target)
+    answer_letters = list(answer)
 
-    for i, letter in enumerate(guess):
+    for index, letter in enumerate(guess):
 
-        # if this letter located correctly (green letter)
-        if letter == target_letters[i]:
-            target_letters[i] = ' '
-            print(f'{letter}: correct')
+        # letter located correctly (green)
+        if letter == answer_letters[index]:
+            answer_letters[index] = ' '
+            print(f'{letter}: green')
 
-        # if this letter present but not located correctly (yellow letter)
-        elif letter in target_letters:
-            target_letters[target_letters.index(letter)] = ' '
-            print(f'{letter}: present, wrongly located')
+        # letter present but not located correctly (yellow)
+        elif letter in answer_letters:
+            answer_letters[answer_letters.index(letter)] = ' '
+            print(f'{letter}: yellow')
 
-        # if this letter not found at all
+        # letter not present at all (grey)
         else:
-            print(f'{letter}: not present')
+            print(f'{letter}: grey')
+
+    attempt += 1
 
 # Word not guessed, game over
-print(f"Game over. The word was '{target}'.")
+print(f"Game over. The word was '{answer}'.")
