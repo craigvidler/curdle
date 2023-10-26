@@ -27,17 +27,18 @@ def score(guess):
     scored_guess = [(letter, 'GREY') for letter in guess]
     answer_letters = list(ANSWER)
 
-    for index, letter in enumerate(guess):
+    # first find green letters
+    for i, (a, b) in enumerate(zip(guess, answer_letters)):
+        if a == b:
+            scored_guess[i] = (a, 'GREEN')
+            answer_letters[i] = ''
 
-        # letter located correctly (green)
-        if letter == answer_letters[index]:
-            scored_guess[index] = (letter, 'GREEN')
-            answer_letters[index] = ''
-
-        # letter present but not located correctly (yellow)
-        elif letter in answer_letters:
-            scored_guess[index] = (letter, 'YELLOW')
-            answer_letters[answer_letters.index(letter)] = ''
+    # then do the yellows
+    for i, (a, b) in enumerate(scored_guess):
+        if b == 'GREY':
+            if guess[i] in answer_letters:
+                scored_guess[i] = (guess[i], 'YELLOW')
+                answer_letters[answer_letters.index(guess[i])] = ''  # nasty
 
     return scored_guess
 
