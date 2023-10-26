@@ -54,7 +54,7 @@ def output(scored_guess):
 
     greens = 0
     for letter, colour in scored_guess:
-        print(f'{colours[colour]}{bold} {letter.upper()} {reset}', end='')
+        print(f'{colours[colour]}{bold} {letter.upper()} {reset} ', end='')
         if colour == 'GREEN':
             greens += 1
     print()
