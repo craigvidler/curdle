@@ -1,6 +1,17 @@
 from random import choice
 from string import ascii_lowercase
 
+# Globals
+BG_COLOURS = (
+    '\u001b[48;5;245m',  # GREY
+    '\u001b[48;5;239m',  # DARK GREY
+    '\u001b[48;5;11m',  # YELLOW
+    '\u001b[48;5;28m'  # GREEN
+)
+BLACK_TEXT = '\u001b[30m'
+WHITE_TEXT = '\u001b[37;1m'
+RESET = '\u001b[0m'
+
 
 def get_valid_guesses():
     with open('data/valid_guesses.txt') as f:
@@ -18,59 +29,50 @@ def get_guess(attempt, valid_guesses):
 
 
 def score(guess, answer):
-    # Start by setting all letters to grey by default. Copy answer to a list
-    # so we can delete letters as we go to avoid counting dupes.
-    scored_guess = [(letter, 'DARK_GREY') for letter in guess]
+    # It's a little tricky to cover all various possible combinations of
+    # duplicate and non-duplicate letters. The procedure below
+    # (two-pass, status 3/green then status 2/yellow, deletions from answer)
+    # is one solution; there might be a nicer way.
+
+    # (a) Start by defaulting all letters in guess to status 1 (ie guessed
+    # (dark grey). (b) Can't use a dict since duplicate letters in guess
+    # would cause duplicate keys. (c) Copy answer to a list so we can delete
+    # letters as we go to avoid counting dupes.
+    scored_guess = [(letter, 1) for letter in guess]
     answer_letters = list(answer)
 
-    # first find any green letters
-    for i, (a, b) in enumerate(zip(guess, answer_letters)):
-        if a == b:
-            scored_guess[i] = (a, 'GREEN')
-            answer_letters[i] = ''
+    # First find any present and well-located letters (ie green). Mark them
+    # status 3 in `scored_guess` and remove from `answer_letters`
+    for i, (guess_letter, answer_letter) in enumerate(zip(guess, answer_letters)):
+        if guess_letter == answer_letter:
+            scored_guess[i] = (guess_letter, 3)
+            answer_letters[i] = ''  # remove letter but maintain structure
 
-    # then find any yellows
-    for i, (_, colour) in enumerate(scored_guess):
-        if colour == 'DARK_GREY':
-            if guess[i] in answer_letters:
-                scored_guess[i] = (guess[i], 'YELLOW')
-                answer_letters[answer_letters.index(guess[i])] = ''  # nasty
+    # Then (ignoring letters already marked status 3), find present but not
+    # well-located letters (ie yellow). Mark them status 2 in `scored_guess`
+    # and remove from `answer_letters`.
+    for i, (guess_letter, status) in enumerate(scored_guess):
+        if guess_letter in answer_letters and status != 3:
+            scored_guess[i] = (guess_letter, 2)
+            answer_letters.remove(guess_letter)  # ok to change structure here
 
     return scored_guess
 
 
-def output(scored_guess, letter_tracker):
-    bg_colours = {
-        'GREY': '\u001b[48;5;245m',
-        'GREEN': '\u001b[48;5;28m',
-        'YELLOW': '\u001b[48;5;11m',
-        'DARK_GREY': '\u001b[48;5;239m'
-    }
-    black_text = '\u001b[30m'
-    white_text = '\u001b[37;1m'
-    bold = '\u001b[1m'
-    reset = '\u001b[0m'
-
-    # Ugly duplication here. Refactor?
-    for letter, colour in scored_guess:
-        text_colour = black_text if colour == 'GREY' else white_text
-        print(f'{bg_colours[colour]}{bold}{text_colour} {letter.upper()} {reset}', end='')
-    print(f'   ', end='')
-    for letter, colour in letter_tracker.items():
-        text_colour = black_text if colour == 'GREY' else white_text
-        print(f'{bg_colours[colour]}{text_colour} {letter.upper()} {reset}', end='')
-    print('\n')
+def output(scored_list):
+    for letter, status in scored_list:
+        text_colour = BLACK_TEXT if status == 0 else WHITE_TEXT
+        print(f'{BG_COLOURS[status]}{text_colour} {letter.upper()} {RESET}', end='')
 
 
 def update_tracker(scored_guess, letter_tracker):
-    # This works but is clunky. Numeric status codes would be easier to compare.
-    for letter, colour in scored_guess:
-        if letter_tracker[letter] == 'GREY':
-            letter_tracker[letter] = colour
-        if letter_tracker[letter] == 'DARK_GREY' and colour in ('YELLOW', 'GREEN'):
-            letter_tracker[letter] = colour
-        if letter_tracker[letter] == 'YELLOW' and colour == 'GREEN':
-            letter_tracker[letter] = colour
+    # Update tracker with each letter from `scored_guess`. In the tracker,
+    # letters maintain their highest status reached hitherto, so only change
+    # a letter's status if it's to a higher one (0/unguessed/light grey ->
+    # 1/guessed/dark grey -> 2/present/yellow -> 3/located/green).
+    for letter, status in scored_guess:
+        if status > letter_tracker[letter]:
+            letter_tracker[letter] = status
 
     return letter_tracker
 
@@ -78,20 +80,30 @@ def update_tracker(scored_guess, letter_tracker):
 def main():
     valid_guesses = get_valid_guesses()
     answer = choose_answer()
-    letter_tracker = {letter: 'GREY' for letter in ascii_lowercase}
+    # Initialise tracker letters at status 0 (ie unchosen/light grey)
+    # Note letter_tracker is a dict (cf scored_guess, a list of tuples)
+    letter_tracker = {letter: 0 for letter in ascii_lowercase}
 
     attempt = 1
     max_attempts = 6
 
-    print(answer)
+    print(answer)  # for testing, remove for production
     while attempt <= max_attempts:
         guess = get_guess(attempt, valid_guesses)
         if not guess:
             print('Not a valid word\n')
             continue
+
         scored_guess = score(guess, answer)
         letter_tracker = update_tracker(scored_guess, letter_tracker)
-        output(scored_guess, letter_tracker)
+
+        # (a) Output expects a list of tuple pairs in the form
+        # [(letter, status)…]. (b) Fiddly presentation details like this
+        # should be factored out of the main loop.
+        output(scored_guess)
+        print(f'   ', end='')
+        output(letter_tracker.items())
+        print('\n')
 
         # Check whether solved
         if guess == answer:
