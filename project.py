@@ -27,7 +27,7 @@ def main():
     while wordle.round <= wordle.max_rounds:
         guess = input(f'Guess #{wordle.round}: ').lower()
         # return guess if guess in valid_guesses else None
-        scored_guess = wordle.guess(guess)
+        scored_guess = wordle.submit(guess)
         if not scored_guess:
             print('Not a valid word\n')
             continue

@@ -11,10 +11,11 @@ class Wordle:
         self.valid_answers = self.load_wordlist('data/valid_answers.txt')
         shuffle(self.valid_answers)
         self.answer = None
-        # Initialise tracker letters at status 0 (ie unguessed/light grey)
-        self.letter_tracker = {letter: 0 for letter in ascii_lowercase}
+        self.letter_tracker = {}
 
     def new_game(self):
+        # Initialise tracker letters at status 0 (ie unguessed/light grey)
+        self.letter_tracker = {letter: 0 for letter in ascii_lowercase}
         self.answer = self.valid_answers.pop()
         self.round = 1
 
@@ -22,7 +23,7 @@ class Wordle:
         with open(filename) as f:
             return f.read().splitlines()
 
-    def guess(self, guess):
+    def submit(self, guess):
         # It's a little tricky to cover all various possible combinations of
         # duplicate and non-duplicate letters. The procedure below
         # (two-pass, status 3/green then status 2/yellow, deletions from answer)
