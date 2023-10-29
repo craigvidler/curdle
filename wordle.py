@@ -1,35 +1,28 @@
-from random import choice
+from random import shuffle
 from string import ascii_lowercase
 
 
 class Wordle:
 
     def __init__(self):
-        self.answer = None
-        self.valid_guesses = self.get_valid_guesses()
-        # Initialise tracker letters at status 0 (ie unguessed/light grey)
-        # Note letter_tracker is a dict (cf scored_guess, a list of tuples)
-        self.letter_tracker = {letter: 0 for letter in ascii_lowercase}
         self.round = 0
         self.max_rounds = 6
+        self.valid_guesses = set(self.load_wordlist('data/valid_guesses.txt'))
+        self.valid_answers = self.load_wordlist('data/valid_answers.txt')
+        shuffle(self.valid_answers)
+        self.answer = None
+        # Initialise tracker letters at status 0 (ie unguessed/light grey)
+        self.letter_tracker = {letter: 0 for letter in ascii_lowercase}
 
     def new_game(self):
-        self.answer = self.choose_answer()
+        self.answer = self.valid_answers.pop()
         self.round = 1
 
-    def guess(self, guess: str):
-        """Take in guess, return a scored guess"""
-        return self.score(guess)
+    def load_wordlist(self, filename):
+        with open(filename) as f:
+            return f.read().splitlines()
 
-    def get_valid_guesses(self):
-        with open('data/valid_guesses.txt') as f:
-            return set(f.read().splitlines())
-
-    def choose_answer(self):
-        with open('data/valid_answers.txt') as f:
-            return choice(f.read().splitlines())
-
-    def score(self, guess):
+    def guess(self, guess):
         # It's a little tricky to cover all various possible combinations of
         # duplicate and non-duplicate letters. The procedure below
         # (two-pass, status 3/green then status 2/yellow, deletions from answer)
@@ -39,6 +32,7 @@ class Wordle:
         # (dark grey). (b) Can't use a dict since duplicate letters in guess
         # would cause duplicate keys. (c) Copy answer to a list so we can delete
         # letters as we go to avoid counting dupes.
+
         if guess not in self.valid_guesses:
             return None
 
@@ -67,8 +61,8 @@ class Wordle:
 
     def update_tracker(self, scored_guess):
         # Update tracker with each letter from `scored_guess`. In the tracker,
-        # letters maintain their highest status reached hitherto, so only change
-        # a letter's status if it's to a higher one (0/unguessed/light grey ->
+        # letters maintain the highest status reached, so only change a letter's
+        # status if it's to a higher one (0/unguessed/light grey ->
         # 1/guessed/dark grey -> 2/present/yellow -> 3/located/green).
         for letter, status in scored_guess:
             if status > self.letter_tracker[letter]:
