@@ -26,16 +26,13 @@ def main():
     print(wordle.answer)  # for testing, remove for production
     while wordle.round <= wordle.max_rounds:
         guess = input(f'Guess #{wordle.round}: ').lower()
-        # return guess if guess in valid_guesses else None
+
         scored_guess = wordle.submit(guess)
         if not scored_guess:
             print('Not a valid word\n')
             continue
 
-        # scored_guess = score(guess, answer)
-        # letter_tracker = update_tracker(scored_guess, letter_tracker)
-
-        # (a) Output expects a list of tuple pairs in the form
+        # (a) output() expects a list of tuple pairs in the form
         # [(letter, status)…], plus any end output.
         output(scored_guess, end='   ')
         output(wordle.letter_tracker.items(), end='\n\n')

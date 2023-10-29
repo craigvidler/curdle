@@ -41,7 +41,7 @@ class Wordle:
         answer_letters = list(self.answer)
 
         # First find any present and well-located letters (ie green). Mark them
-        # status 3 in `scored_guess` and remove from `answer_letters`
+        # status 3 in `scored_guess` and remove from `answer_letters`.
         for i, (guess_letter, answer_letter) in enumerate(zip(guess, answer_letters)):
             if guess_letter == answer_letter:
                 scored_guess[i] = (guess_letter, 3)
