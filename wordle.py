@@ -15,8 +15,7 @@ class Wordle:
         self.round = 0
         self.max_rounds = 6
         self.valid_guesses = set(self.load_wordlist('data/valid_guesses.txt'))
-        self.valid_answers = self.load_wordlist('data/valid_answers.txt')
-        shuffle(self.valid_answers)
+        self.valid_answers = []
         self.answer = None
         self.letter_tracker = {}
 
@@ -25,6 +24,13 @@ class Wordle:
 
         # initialise tracker letters at status 0 (ie unguessed/light grey)
         self.letter_tracker = {letter: 0 for letter in ascii_lowercase}
+
+        # answers handled here not init to support in theory indefinitely many games
+        # with minimal repetition
+        if not self.valid_answers:
+            self.valid_answers = self.load_wordlist('data/valid_answers.txt')
+            shuffle(self.valid_answers)
+
         self.answer = self.valid_answers.pop()
         self.round = 1
 
