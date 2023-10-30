@@ -17,7 +17,13 @@ Author: Craig Vidler, 30 Oct 23
 
 +   ### Interface
 
-    Instantiate and call `wordle.new_game()` to start. Call `wordle.submit(guess)`; if `guess` is a valid guess, it's returned as a list of tuples with a score for each letter eg `[('s', 1), ('s', 1), ('o', 3), ('r', 2), ('e', 1)]`. The letter tracker (a dict of tuples) is updated with each valid guess and is available at `wordle.letter_tracker` for display. `wordle.round` tracks the current round; when it equals `wordle.max_round`, the game is over (lost). Every round, the client code can check whether `guess` equals `wordle.answer`; if so, the game is won.
+    Instantiate, specify wordlists if required (`wordle = Wordle()`, `wordle = Wordle(answers_file='', guesses_file=''`)). See below for expected content/format of wordlists. Call `wordle.new_game()` to start. 
+
+    Call `wordle.submit(guess)`; if `guess` is a valid guess, it's returned as a list of tuples with a score for each letter eg `[('s', 1), ('c', 1), ('o', 3), ('r', 2), ('e', 1)]`. 
+
+    The letter tracker (a dict not list of scored letter tuples as above) is updated with each valid guess and is available at `wordle.letter_tracker` for display. 
+
+    `wordle.round` tracks the current round; when it equals `wordle.max_round`, the game is over/lost. Every round, the client code can check whether `guess` equals `wordle.answer`; if so, the game is won.
 
 
 +   ### Wordlists
@@ -31,7 +37,7 @@ Author: Craig Vidler, 30 Oct 23
 
     For ease of use, I've joined the two into one inclusive list of 12972
     valid guesses and valid answers (valid answers being also valid guesses),
-    and kept one list of just the 2315 valid answers.
+    and kept one list of just the 2315 valid answers. Other wordlists if used would have to adhere to this pattern.
 
 
 +   ### Guess scoring

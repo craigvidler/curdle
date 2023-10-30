@@ -11,10 +11,14 @@ from string import ascii_lowercase
 
 class Wordle:
 
-    def __init__(self):
+    def __init__(self, answers_file='', guesses_file=''):
+        """Sets up a Wordle instance. Wordlists can be overridden here."""
+        self.answers_file = answers_file or 'data/valid_answers.txt'
+        self.guesses_file = guesses_file or 'data/valid_guesses.txt'
+        self.valid_guesses = set(self.load_wordlist(self.guesses_file))
+
         self.round = 0
         self.max_rounds = 6
-        self.valid_guesses = set(self.load_wordlist('data/valid_guesses.txt'))
         self.valid_answers = []
         self.answer = None
         self.letter_tracker = {}
@@ -25,10 +29,10 @@ class Wordle:
         # initialise tracker letters at status 0 (ie unguessed/light grey)
         self.letter_tracker = {letter: 0 for letter in ascii_lowercase}
 
-        # answers handled here not init to support in theory indefinitely many games
-        # with minimal repetition
+        # answers loaded here not init, with shuffle/pop not random.choice, to
+        # support arbitrarily many games with minimal repetition
         if not self.valid_answers:
-            self.valid_answers = self.load_wordlist('data/valid_answers.txt')
+            self.valid_answers = self.load_wordlist(self.answers_file)
             shuffle(self.valid_answers)
 
         self.answer = self.valid_answers.pop()
@@ -48,7 +52,8 @@ class Wordle:
         if guess not in self.valid_guesses:
             return None
 
-        # default all letters in guess to status 1 (ie guessed/dark grey)
+        # default all letters in guess to status 1 (ie guessed/dark grey),
+        # copy answer to a list (so we can remove letters)
         scored_guess = [(letter, 1) for letter in guess]
         answer_letters = list(self.answer)
 

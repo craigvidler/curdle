@@ -32,7 +32,7 @@ def main():
             print('Not a valid word\n')
             continue
 
-        # (a) output() expects a list of tuple pairs in the form
+        # output() expects a list of tuple pairs in the form
         # [(letter, status)…], plus any end output.
         output(scored_guess, end='   ')
         output(wordle.letter_tracker.items(), end='\n\n')
