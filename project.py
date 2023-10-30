@@ -11,6 +11,10 @@ BLACK_TEXT = '\u001b[30m'
 WHITE_TEXT = '\u001b[37;1m'
 RESET = '\u001b[0m'
 
+# game object
+wordle = Wordle()
+wordle.new_game()
+
 
 def output(scored_list, end):
     for letter, status in scored_list:
@@ -19,12 +23,21 @@ def output(scored_list, end):
     print(end, end='')
 
 
-def main():
-    wordle = Wordle()
-    wordle.new_game()
+def menu():
+    while True:
+        command = input('[N]ew game, or [Q]uit: ').lower()
+        if command == 'q':
+            raise SystemExit()
+        elif command == 'n':
+            wordle.new_game()
+            break
 
-    print(wordle.answer)  # for testing, remove for production
+
+def main():
+
     while wordle.round <= wordle.max_rounds:
+        if wordle.round == 1:
+            print(wordle.answer)  # for testing, remove for production
         guess = input(f'Guess #{wordle.round}: ').lower()
 
         scored_guess = wordle.submit(guess)
@@ -37,13 +50,15 @@ def main():
         output(scored_guess, end='   ')
         output(wordle.letter_tracker.items(), end='\n\n')
 
-        # Check whether solved or game over
+        # check whether solved or game over
         if wordle.status == 'solved':
-            print('Correct!')
-            raise SystemExit()
+            print('Correct! ', end='')
         elif wordle.status == 'game over':
-            print(f'Game over. The answer was "{wordle.answer}".')
-            raise SystemExit()
+            print(f'Game over. The answer was "{wordle.answer}". ', end='')
+
+        # menu if not playing
+        if wordle.status != 'playing':
+            menu()
 
 
 if __name__ == '__main__':
