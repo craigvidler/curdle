@@ -37,13 +37,13 @@ def main():
         output(scored_guess, end='   ')
         output(wordle.letter_tracker.items(), end='\n\n')
 
-        # Check whether solved
-        if guess == wordle.answer:
+        # Check whether solved or game over
+        if wordle.status == 'solved':
             print('Correct!')
             raise SystemExit()
-
-    # Word not guessed, game over
-    print(f'Game over. The answer was "{wordle.answer}".')
+        elif wordle.status == 'game over':
+            print(f'Game over. The answer was "{wordle.answer}".')
+            raise SystemExit()
 
 
 if __name__ == '__main__':

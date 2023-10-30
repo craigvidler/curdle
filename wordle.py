@@ -17,6 +17,7 @@ class Wordle:
         self.guesses_file = guesses_file or 'data/valid_guesses.txt'
         self.valid_guesses = set(self.load_wordlist(self.guesses_file))
 
+        self.status = 'start'  # can also be 'playing', 'solved', 'game over'
         self.round = 0
         self.max_rounds = 6
         self.valid_answers = []
@@ -37,6 +38,7 @@ class Wordle:
 
         self.answer = self.valid_answers.pop()
         self.round = 1
+        self.status = 'playing'
 
     def load_wordlist(self, filename):
         with open(filename) as f:
@@ -69,6 +71,13 @@ class Wordle:
                 scored_guess[i] = (guess_letter, 2)
                 answer_letters.remove(guess_letter)
 
+        # if solved or game over, change status
+        if guess == self.answer:
+            self.status = 'solved'
+        elif self.round == self.max_rounds:
+            self.status = 'game over'
+
+        # update tracker, increment round
         self.update_tracker(scored_guess)
         self.round += 1
 
