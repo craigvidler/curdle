@@ -30,8 +30,8 @@ class Wordle:
         # initialise tracker letters at status 0 (ie unguessed/light grey)
         self.letter_tracker = {letter: 0 for letter in ascii_lowercase}
 
-        # answers loaded here not init, with shuffle/pop not random.choice, to
-        # support arbitrarily many games with minimal repetition
+        # answers loaded here not in init, with shuffle/pop not random.choice, to
+        # support arbitrarily many games with minimal answer repetition
         if not self.valid_answers:
             self.valid_answers = self.load_wordlist(self.answers_file)
             shuffle(self.valid_answers)
