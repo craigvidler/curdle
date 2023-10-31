@@ -1,14 +1,17 @@
 from wordle import Wordle
+from itertools import groupby
+from collections import Counter
 
-# Global constants
-BG_COLOURS = (
-    '\u001b[48;5;245m',  # LIGHT GREY
-    '\u001b[48;5;239m',  # DARK GREY
-    '\u001b[48;5;11m',  # YELLOW
-    '\u001b[48;5;28m'  # GREEN
-)
+# ANSI codes for background colours and text
+LIGHT_GREY = '\u001b[48;5;245m'
+DARK_GREY = '\u001b[48;5;239m'
+YELLOW = '\u001b[48;5;11m'
+GREEN = '\u001b[48;5;28m'
+BG_COLOURS = (LIGHT_GREY, DARK_GREY, YELLOW, GREEN)
+
 BLACK_TEXT = '\u001b[30m'
-WHITE_TEXT = '\u001b[37;1m'
+WHITE_TEXT = '\u001b[37m'
+BOLD_WHITE_TEXT = '\u001b[37;1m'  # 'bright' white/bold
 RESET = '\u001b[0m'
 
 # game object
@@ -16,21 +19,75 @@ wordle = Wordle()
 wordle.new_game()
 
 
-def output(scored_list, end):
+def output(scored_list: list, end: str):
     for letter, status in scored_list:
-        text_colour = BLACK_TEXT if status == 0 else WHITE_TEXT
+        text_colour = BLACK_TEXT if status == 0 else BOLD_WHITE_TEXT
         print(f'{BG_COLOURS[status]}{text_colour} {letter.upper()} {RESET}', end='')
     print(end, end='')
 
 
 def menu():
     while True:
-        command = input('[N]ew game, or [Q]uit: ').lower()
+        command = input('[N]ew game, [S]tats, or [Q]uit: ').lower()
         if command == 'q':
             raise SystemExit()
+        if command == 's':
+            print(format_stats(wordle.stats))
         elif command == 'n':
             wordle.new_game()
             break
+
+
+def format_stats(stats: list):
+    """Turn wordle.stats into printable output."""
+
+    # Eg `stats` might equal [0, 0, 4, 6, 0, 3], meaning game 1 lost, game 2
+    # lost, game 3 won in round 4, game 4 won in round 6, game 5 lost, game 6
+    # won in round 3. `streaks` would then equal [0, 2, 0, 1]. (Retain zeroes
+    # since current streak might be 0.)
+
+    # total number of games
+    played = len(stats)
+
+    # positive numbers as a %age of all numbers
+    win_percent = round(sum(game > 0 for game in stats) / played * 100)
+
+    # stats grouped into summed streaks and zeros
+    grouped = groupby(stats, lambda x: x > 0)
+    streaks = [sum(1 for _ in group) if key else 0 for key, group in grouped]
+
+    label_style = DARK_GREY
+    value_style = f'{LIGHT_GREY} {BOLD_WHITE_TEXT}'
+
+    return (
+        '\n'
+        f'{label_style} Played {value_style}{played} {RESET}   '
+        f'{label_style} Win % {value_style}{win_percent} {RESET}   '
+        f'{label_style} Current streak {value_style}{streaks[-1]} {RESET}   '
+        f'{label_style} Max streak {value_style}{max(streaks)} {RESET}\n\n'
+        f'Guess distribution: \n\n'
+        f'{histo(stats)}'
+    )
+
+
+def histo(stats: list):
+    """Turn wordle.stats into a histogram"""
+
+    MAX_SIZE = 24
+    output = ''
+    totals = Counter(stats)
+
+    # need biggest value upfront, bars sized proportionally to it
+    biggest = max(v for k, v in totals.items() if k > 0)
+
+    # Ensure all keys 1-6 are present, with a 0 default val
+    for k, v in [(i, totals.get(i, 0)) for i in range(1, 7)]:
+        # latest score highlighted in green
+        bg_colour = GREEN if k == stats[-1] else DARK_GREY
+        spaces = ' ' * round(MAX_SIZE * (v / biggest))  # size the bar
+        output += f' {k} {bg_colour}{spaces}{WHITE_TEXT} {v} {RESET}\n'
+
+    return output
 
 
 def main():

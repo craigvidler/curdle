@@ -14,15 +14,17 @@ class Wordle:
     def __init__(self, answers_file='', guesses_file=''):
         """Sets up a Wordle instance. Wordlists can be overridden here."""
         self.answers_file = answers_file or 'data/valid_answers.txt'
+        self.valid_answers = []  # answers handled in new_game()
+        self.answer = None
+
         self.guesses_file = guesses_file or 'data/valid_guesses.txt'
         self.valid_guesses = set(self.load_wordlist(self.guesses_file))
 
         self.status = 'start'  # can also be 'playing', 'solved', 'game over'
         self.round = 0
         self.max_rounds = 6
-        self.valid_answers = []
-        self.answer = None
-        self.letter_tracker = {}
+        self.letter_tracker = {}  # record guessed letters
+        self.stats = []  # record game results per session
 
     def new_game(self):
         """Set/reset here anything needed to support multiple games"""
@@ -71,10 +73,12 @@ class Wordle:
                 scored_guess[i] = (guess_letter, 2)
                 answer_letters.remove(guess_letter)
 
-        # if solved or game over, change status
+        # if solved or game over, change status. Record game score in stats.
         if guess == self.answer:
+            self.stats.append(self.round)
             self.status = 'solved'
         elif self.round == self.max_rounds:
+            self.stats.append(0)
             self.status = 'game over'
 
         # update tracker, increment round
