@@ -5,13 +5,13 @@ from collections import Counter
 # ANSI codes for background colours and text
 LIGHT_GREY = '\u001b[48;5;245m'
 DARK_GREY = '\u001b[48;5;239m'
-YELLOW = '\u001b[48;5;11m'
+YELLOW = '\u001b[48;5;214m'
 GREEN = '\u001b[48;5;28m'
 BG_COLOURS = (LIGHT_GREY, DARK_GREY, YELLOW, GREEN)
 
 BLACK_TEXT = '\u001b[30m'
 WHITE_TEXT = '\u001b[37m'
-BOLD_WHITE_TEXT = '\u001b[37;1m'  # 'bright' white/bold
+BOLD_WHITE_TEXT = '\u001b[37;1m'
 RESET = '\u001b[0m'
 
 # game object
@@ -56,15 +56,15 @@ def format_stats(stats: list):
     grouped = groupby(stats, lambda x: x > 0)
     streaks = [sum(1 for _ in group) if key else 0 for key, group in grouped]
 
-    label_style = DARK_GREY
-    value_style = f'{LIGHT_GREY} {BOLD_WHITE_TEXT}'
+    label_style = f'{LIGHT_GREY}{BLACK_TEXT}'
+    value_style = f'{DARK_GREY}{BOLD_WHITE_TEXT}'
 
     return (
         '\n'
-        f'{label_style} Played {value_style}{played} {RESET}   '
-        f'{label_style} Win % {value_style}{win_percent} {RESET}   '
-        f'{label_style} Current streak {value_style}{streaks[-1]} {RESET}   '
-        f'{label_style} Max streak {value_style}{max(streaks)} {RESET}\n\n'
+        f'{label_style} Played {value_style} {played} {RESET}   '
+        f'{label_style} Win % {value_style} {win_percent} {RESET}   '
+        f'{label_style} Current streak {value_style} {streaks[-1]} {RESET}   '
+        f'{label_style} Max streak {value_style} {max(streaks)} {RESET}\n\n'
         f'Guess distribution: \n\n'
         f'{histo(stats)}'
     )
@@ -77,7 +77,7 @@ def histo(stats: list):
     output = ''
     totals = Counter(stats)
 
-    # need biggest value upfront, bars sized proportionally to it
+    # extract biggest value upfront, bars sized proportionally to it
     biggest = max(v for k, v in totals.items() if k > 0)
 
     # Ensure all keys 1-6 are present, with a 0 default val
