@@ -26,6 +26,10 @@ class Wordle:
         self.letter_tracker = {}  # record guessed letters
         self.stats = []  # record game results per session
 
+    def load_wordlist(self, filename):
+        with open(filename) as f:
+            return f.read().splitlines()
+
     def new_game(self):
         """Set/reset here anything needed to support multiple games"""
 
@@ -41,10 +45,6 @@ class Wordle:
         self.answer = self.valid_answers.pop()
         self.round = 1
         self.status = 'playing'
-
-    def load_wordlist(self, filename):
-        with open(filename) as f:
-            return f.read().splitlines()
 
     def submit(self, guess):
         """
