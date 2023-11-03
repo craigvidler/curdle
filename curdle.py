@@ -45,28 +45,48 @@ def main(stdscr):
     guess_x = center_x - guess_width // 2
 
     # set up colours
-    curses.init_pair(1, 232, 250)  # black/light grey
+    curses.init_pair(1, 232, 250)  # very dark grey/light grey
     curses.init_pair(2, 255, 239)  # white/dark grey
     curses.init_pair(3, 255, 214)  # white/yellow
     curses.init_pair(4, 255, 28)  # white/green
+    curses.init_pair(5, 239, 255)  # dark grey/white
+    curses.init_pair(6, 247, 239)  # mid grey/dark grey
 
     LGREY = curses.color_pair(1) | curses.A_BOLD
     DGREY = curses.color_pair(2) | curses.A_BOLD
     YELLOW = curses.color_pair(3) | curses.A_BOLD
     GREEN = curses.color_pair(4) | curses.A_BOLD
+    WHITE = curses.color_pair(5) | curses.A_BOLD
+    MGREY = curses.color_pair(6)
+    DGREY_NO_BOLD = curses.color_pair(2)
 
     colors = (LGREY, DGREY, YELLOW, GREEN)
+
+    # title bar
+    title = 'curdle'
+    stdscr.addstr(0, 0, ' ' * curses.COLS, DGREY)
+    stdscr.addstr(0, center_x - len(title) // 2, title, DGREY)
+
+    # menu. FIXME FFS
+    menu = 'help  stats  quit'
+    stdscr.addstr(0, curses.COLS - len(menu) - 1, '', DGREY)
+    menu = ('h', 'elp', '  ', 's', 'tats', '  ', 'q', 'uit')
+    for item in menu:
+        if len(item) == 1:
+            stdscr.addstr(item, DGREY_NO_BOLD)
+        else:
+            stdscr.addstr(item, MGREY)
 
     # set up guesses board
     for i in range(6):
         y = 5 + i * 2
         for j in range(5):
-            stdscr.addstr(y, guess_x + j * 4, '   ', LGREY)
+            stdscr.addstr(y, guess_x + j * 4, '   ', WHITE)
 
     # set up letter tracker
     draw_tracker(stdscr)
 
-    stdscr.addstr(0, 0, wordle.answer)
+    stdscr.addstr(2, 0, wordle.answer)
 
     for round in range(6):
         # input a guess
