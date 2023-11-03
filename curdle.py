@@ -99,7 +99,8 @@ def main(stdscr):
             letter = stdscr.getkey()
 
             # Both BS and DEL needed? What about curses.KEY_BACKSPACE (263)?
-            if ord(letter) in (curses.ascii.BS, curses.ascii.DEL) and guess:
+            # Arrows keys send eg 'KEY_LEFT'; first check filters them out.
+            if len(letter) == 1 and ord(letter) in (curses.ascii.BS, curses.ascii.DEL) and guess:
                 guess = guess[:-1]
                 stdscr.addstr(5 + round * 2, guess_x + (length - 1) * 4, '   ', LGREY)
 
