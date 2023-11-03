@@ -88,10 +88,12 @@ def main(stdscr):
 
     stdscr.addstr(2, 0, wordle.answer)
 
+    # for each row in guess table
     for round in range(6):
         # input a guess
         guess = ''
 
+        # loop while in row until a valid guess is entered
         while True:
             length = len(guess)
             letter = stdscr.getkey()
@@ -103,20 +105,17 @@ def main(stdscr):
 
             # '\n' cross-platform? What about curses.KEY_ENTER?
             elif letter == '\n' and length == 5:
-                break
+                scored_guess = wordle.submit(guess)
+                if scored_guess:
+                    for i, (letter, score) in enumerate(scored_guess):
+                        letter = f' {letter.upper()} '
+                        stdscr.addstr(5 + round * 2, guess_x + i * 4, letter, colors[score])
+                    break
 
             elif letter in ascii_letters and length < 5:
                 guess += letter
                 letter = f' {letter.upper()} '
                 stdscr.addstr(5 + round * 2, guess_x + length * 4, letter, DGREY)
-
-        scored_guess = wordle.submit(guess)
-        # stdscr.addstr(1, 0, str(scored_guess))
-
-        if scored_guess:
-            for i, (letter, score) in enumerate(scored_guess):
-                letter = f' {letter.upper()} '
-                stdscr.addstr(5 + round * 2, guess_x + i * 4, letter, colors[score])
 
         draw_tracker(stdscr, wordle.letter_tracker)
 
