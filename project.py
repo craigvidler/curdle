@@ -7,7 +7,7 @@ LIGHT_GREY = '\u001b[48;5;245m'
 DARK_GREY = '\u001b[48;5;239m'
 YELLOW = '\u001b[48;5;214m'
 GREEN = '\u001b[48;5;28m'
-BG_COLOURS = (LIGHT_GREY, DARK_GREY, YELLOW, GREEN)
+BG_COLORS = (LIGHT_GREY, DARK_GREY, YELLOW, GREEN)
 
 BLACK_TEXT = '\u001b[30m'
 WHITE_TEXT = '\u001b[37m'
@@ -21,8 +21,8 @@ wordle.new_game()
 
 def output(scored_list: list, end: str):
     for letter, status in scored_list:
-        text_colour = BLACK_TEXT if status == 0 else BOLD_WHITE_TEXT
-        print(f'{BG_COLOURS[status]}{text_colour} {letter.upper()} {RESET}', end='')
+        text_color = BLACK_TEXT if status == 0 else BOLD_WHITE_TEXT
+        print(f'{BG_COLORS[status]}{text_color} {letter.upper()} {RESET}', end='')
     print(end, end='')
 
 
@@ -83,9 +83,9 @@ def histo(stats: list):
     # Ensure all keys 1-6 are present, with a 0 default val
     for k, v in [(i, totals.get(i, 0)) for i in range(1, 7)]:
         # latest score highlighted in green
-        bg_colour = GREEN if k == stats[-1] else DARK_GREY
+        bg_color = GREEN if k == stats[-1] else DARK_GREY
         spaces = ' ' * round(MAX_SIZE * (v / biggest))  # size the bar
-        output += f' {k} {bg_colour}{spaces}{WHITE_TEXT} {v} {RESET}\n'
+        output += f' {k} {bg_color}{spaces}{WHITE_TEXT} {v} {RESET}\n'
 
     return output
 
