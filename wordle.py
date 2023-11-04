@@ -62,10 +62,10 @@ class Wordle:
         answer_letters = list(self.answer)
 
         # first find status 3 letters (ie located/green)
-        for i, (guess_letter, answer_letter) in enumerate(zip(guess, answer_letters)):
+        for i, (guess_letter, answer_letter) in enumerate(zip(guess, self.answer)):
             if guess_letter == answer_letter:
                 scored_guess[i] = (guess_letter, 3)
-                answer_letters[i] = ''  # keep list element but clear it
+                answer_letters.remove(guess_letter)
 
         # then find status 2 letters (ie present/yellow)
         for i, (guess_letter, status) in enumerate(scored_guess):
