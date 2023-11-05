@@ -1,5 +1,4 @@
 import curses
-import curses.ascii  # need to import specifically or it won't be found
 from string import ascii_letters
 from wordle import Wordle
 
@@ -45,7 +44,7 @@ def main(stdscr):
     guess_x = center_x - guess_width // 2
 
     # set up colours
-    curses.init_pair(1, 232, 250)  # very dark grey/light grey
+    curses.init_pair(1, 234, 250)  # very dark grey/light grey
     curses.init_pair(2, 255, 239)  # white/dark grey
     curses.init_pair(3, 255, 136)  # white/yellow
     curses.init_pair(4, 255, 28)  # white/green
@@ -94,18 +93,18 @@ def main(stdscr):
         guess = ''
 
         # loop while in row until a valid guess is entered
+        # FIXME mess-but-works prototype standard, clean up
         while True:
             length = len(guess)
-            letter = stdscr.getkey()
+            key = stdscr.getkey()
 
-            # Both BS and DEL needed? What about curses.KEY_BACKSPACE (263)?
-            # Arrows keys send eg 'KEY_LEFT'; first check filters them out.
-            if len(letter) == 1 and ord(letter) in (curses.ascii.BS, curses.ascii.DEL) and guess:
+            # BACKSPACE. KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case
+            if key in ('KEY_BACKSPACE', '\x7F', '\b') and guess:
                 guess = guess[:-1]
                 stdscr.addstr(5 + round * 2, guess_x + (length - 1) * 4, '   ', LGREY)
 
-            # '\n' cross-platform? What about curses.KEY_ENTER?
-            elif letter == '\n' and length == 5:
+            # ENTER, should work cross-platform
+            elif key in ('\n', '\r') and length == 5:
                 scored_guess = wordle.submit(guess)
                 if scored_guess:
                     for i, (letter, score) in enumerate(scored_guess):
@@ -113,9 +112,9 @@ def main(stdscr):
                         stdscr.addstr(5 + round * 2, guess_x + i * 4, letter, colors[score.value])
                     break
 
-            elif letter in ascii_letters and length < 5:
-                guess += letter
-                letter = f' {letter.upper()} '
+            elif key in ascii_letters and length < 5:
+                guess += key
+                letter = f' {key.upper()} '
                 stdscr.addstr(5 + round * 2, guess_x + length * 4, letter, DGREY)
 
         draw_tracker(stdscr, wordle.letter_tracker)
