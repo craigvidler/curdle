@@ -77,7 +77,7 @@ class Wordle:
 
         # then find PRESENT letters (ie 2/yellow)
         for i, (guess_letter, score) in enumerate(scored_guess):
-            if guess_letter in answer_letters and score != Score.CORRECT:
+            if guess_letter in answer_letters and score is not Score.CORRECT:
                 scored_guess[i] = (guess_letter, Score.PRESENT)
                 answer_letters.remove(guess_letter)
 
