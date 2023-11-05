@@ -47,7 +47,7 @@ def main(stdscr):
     # set up colours
     curses.init_pair(1, 232, 250)  # very dark grey/light grey
     curses.init_pair(2, 255, 239)  # white/dark grey
-    curses.init_pair(3, 255, 214)  # white/yellow
+    curses.init_pair(3, 255, 136)  # white/yellow
     curses.init_pair(4, 255, 28)  # white/green
     curses.init_pair(5, 239, 255)  # dark grey/white
     curses.init_pair(6, 247, 239)  # mid grey/dark grey
