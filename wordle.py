@@ -5,15 +5,12 @@ front end (the client code using this class).
 See README.md for details.
 """
 
-from enum import Enum
+from enum import IntEnum
 from random import shuffle
 from string import ascii_lowercase as a_to_z
 
 
-class Score(Enum):
-    def __gt__(self, other):
-        return self.value > other.value
-
+class Score(IntEnum):
     UNGUESSED = 0
     ABSENT = 1
     PRESENT = 2
