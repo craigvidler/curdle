@@ -29,7 +29,7 @@ def draw_tracker(stdscr, tracker=None):
         for j, letter in enumerate(row):
             # if tracker:
             #     print(tracker[letter])
-            color = LGREY if not tracker else colors[tracker[letter]]
+            color = LGREY if not tracker else colors[tracker[letter].value]
             stdscr.addstr(y, tracker_x + j * 4, f' {letter.upper()} ', color)
 
 
@@ -110,7 +110,7 @@ def main(stdscr):
                 if scored_guess:
                     for i, (letter, score) in enumerate(scored_guess):
                         letter = f' {letter.upper()} '
-                        stdscr.addstr(5 + round * 2, guess_x + i * 4, letter, colors[score])
+                        stdscr.addstr(5 + round * 2, guess_x + i * 4, letter, colors[score.value])
                     break
 
             elif letter in ascii_letters and length < 5:

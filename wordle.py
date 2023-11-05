@@ -5,8 +5,19 @@ front end (the client code using this class).
 See README.md for details.
 """
 
+from enum import Enum
 from random import shuffle
-from string import ascii_lowercase
+from string import ascii_lowercase as a_to_z
+
+
+class Score(Enum):
+    def __gt__(self, other):
+        return self.value > other.value
+
+    UNGUESSED = 0
+    ABSENT = 1
+    PRESENT = 2
+    CORRECT = 3
 
 
 class Wordle:
@@ -33,11 +44,11 @@ class Wordle:
     def new_game(self):
         """Set/reset here anything needed to support multiple games"""
 
-        # initialise tracker letters at status 0 (ie unguessed/light grey)
-        self.letter_tracker = {letter: 0 for letter in ascii_lowercase}
+        # initialise tracker letters as UNGUESSED (ie status 0/light grey)
+        self.letter_tracker = {letter: Score.UNGUESSED for letter in a_to_z}
 
-        # answers loaded here not in init, with shuffle/pop not random.choice, to
-        # support arbitrarily many games with minimal answer repetition
+        # answers loaded here not in init, with shuffle/pop not random.choice,
+        # to support arbitrarily many games with minimal answer repetition
         if not self.valid_answers:
             self.valid_answers = self.load_wordlist(self.answers_file)
             shuffle(self.valid_answers)
@@ -56,24 +67,25 @@ class Wordle:
         if guess not in self.valid_guesses:
             return None
 
-        # default all letters in guess to status 1 (ie guessed/dark grey),
+        # default all letters in guess to ABSENT (1/guessed/dark grey),
         # copy answer to a list (so we can remove letters)
-        scored_guess = [(letter, 1) for letter in guess]
+        scored_guess = [(letter, Score.ABSENT) for letter in guess]
         answer_letters = list(self.answer)
 
-        # first find status 3 letters (ie located/green)
+        # first find CORRECT letters (ie 3/green)
         for i, (guess_letter, answer_letter) in enumerate(zip(guess, self.answer)):
             if guess_letter == answer_letter:
-                scored_guess[i] = (guess_letter, 3)
+                scored_guess[i] = (guess_letter, Score.CORRECT)
                 answer_letters.remove(guess_letter)
 
-        # then find status 2 letters (ie present/yellow)
-        for i, (guess_letter, status) in enumerate(scored_guess):
-            if guess_letter in answer_letters and status != 3:
-                scored_guess[i] = (guess_letter, 2)
+        # then find PRESENT letters (ie 2/yellow)
+        for i, (guess_letter, score) in enumerate(scored_guess):
+            if guess_letter in answer_letters and score != Score.CORRECT:
+                scored_guess[i] = (guess_letter, Score.PRESENT)
                 answer_letters.remove(guess_letter)
 
         # if solved or game over, change status. Record game score in stats.
+         # FIXME this doesn't belong here (?)
         if guess == self.answer:
             self.stats.append(self.round)
             self.status = 'solved'
@@ -90,9 +102,9 @@ class Wordle:
     def update_tracker(self, scored_guess):
         """
         Update tracker with each letter from `scored_guess`.
-        Only change a letter's status if it's to a higher one.
+        Only change a letter's score if it's to a higher one.
         """
 
-        for letter, status in scored_guess:
-            if status > self.letter_tracker[letter]:
-                self.letter_tracker[letter] = status
+        for letter, score in scored_guess:
+            if score > self.letter_tracker[letter]:
+                self.letter_tracker[letter] = score

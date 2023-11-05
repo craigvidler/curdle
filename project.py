@@ -20,9 +20,10 @@ wordle.new_game()
 
 
 def output(scored_list: list, end: str):
-    for letter, status in scored_list:
-        text_color = BLACK_TEXT if status == 0 else BOLD_WHITE_TEXT
-        print(f'{BG_COLORS[status]}{text_color} {letter.upper()} {RESET}', end='')
+    for letter, score in scored_list:
+        text_color = BLACK_TEXT if score.name == 'UNGUESSED' else BOLD_WHITE_TEXT
+        bg_color = BG_COLORS[score.value]
+        print(f'{bg_color}{text_color} {letter.upper()} {RESET}', end='')
     print(end, end='')
 
 
@@ -103,7 +104,7 @@ def main():
             continue
 
         # output() expects a list of tuple pairs in the form
-        # [(letter, status)…], plus any end output.
+        # [(letter, score)…], plus any end output.
         output(scored_guess, end='   ')
         output(wordle.letter_tracker.items(), end='\n\n')
 
