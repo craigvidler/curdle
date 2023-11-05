@@ -5,13 +5,13 @@ from collections import Counter
 # ANSI codes for background colours and text
 LIGHT_GREY = '\u001b[48;5;245m'
 DARK_GREY = '\u001b[48;5;239m'
-YELLOW = '\u001b[48;5;214m'
+YELLOW = '\u001b[48;5;136m'
 GREEN = '\u001b[48;5;28m'
 BG_COLORS = (LIGHT_GREY, DARK_GREY, YELLOW, GREEN)
 
-BLACK_TEXT = '\u001b[30m'
+BLACK_TEXT = '\u001b[38;5;235m'
 WHITE_TEXT = '\u001b[37m'
-BOLD_WHITE_TEXT = '\u001b[37;1m'
+BOLD = '\u001b[1m'
 RESET = '\u001b[0m'
 
 # game object
@@ -21,9 +21,9 @@ wordle.new_game()
 
 def output(scored_list: list, end: str):
     for letter, score in scored_list:
-        text_color = BLACK_TEXT if score.name == 'UNGUESSED' else BOLD_WHITE_TEXT
+        text_color = BLACK_TEXT if score.name == 'UNGUESSED' else WHITE_TEXT
         bg_color = BG_COLORS[score.value]
-        print(f'{bg_color}{text_color} {letter.upper()} {RESET}', end='')
+        print(f'{bg_color}{BOLD}{text_color} {letter.upper()} {RESET}', end='')
     print(end, end='')
 
 
@@ -58,7 +58,7 @@ def format_stats(stats: list):
     streaks = [sum(1 for _ in group) if key else 0 for key, group in grouped]
 
     label_style = f'{LIGHT_GREY}{BLACK_TEXT}'
-    value_style = f'{DARK_GREY}{BOLD_WHITE_TEXT}'
+    value_style = f'{DARK_GREY}{BOLD}{WHITE_TEXT}'
 
     return (
         '\n'
