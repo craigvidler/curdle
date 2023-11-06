@@ -120,7 +120,13 @@ def main(stdscr):
         draw_tracker(stdscr, wordle.letter_tracker)
 
         if guess == wordle.answer:
+            stdscr.addstr(3, 0, 'Correct! ')
             break
+    else:
+        stdscr.addstr(3, 0, f'Game over! The word was "{wordle.answer}". ')
+
+    stdscr.addstr('Press any key to exit.')
+    stdscr.getkey()
 
 
 curses.wrapper(main)
