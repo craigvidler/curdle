@@ -54,15 +54,7 @@ class Wordle:
         self.round = 1
         self.status = 'playing'
 
-    def submit(self, guess):
-        """
-        The core of the game: take in a guess, validate it, score it in
-        comparison to the answer, return a scored guess as a list of tuples.
-        """
-
-        # validate guess
-        if guess not in self.valid_guesses:
-            return None
+    def score_guess(self, guess):
 
         # default all letters in guess to ABSENT (1/guessed/dark grey),
         # copy answer to a list (so we can remove letters)
@@ -81,20 +73,39 @@ class Wordle:
                 scored_guess[i] = (guess_letter, Score.PRESENT)
                 answer_letters.remove(guess_letter)
 
-        # if solved or game over, change status. Record game score in stats.
-         # FIXME this doesn't belong here (?)
-        if guess == self.answer:
+        return scored_guess
+
+    def submit(self, guess):
+        """
+        take in a guess, validate it, score it in comparison to the answer,
+        return a scored guess as a list of tuples.
+        """
+
+        # validate guess
+        if guess not in self.valid_guesses:
+            return None
+
+        # score it
+        scored_guess = self.score_guess(guess)
+
+        # update game, tracker
+        self.update_game(scored_guess)
+        self.update_tracker(scored_guess)
+
+        return scored_guess
+
+    def update_game(self, scored_guess):
+
+        # If solved or game over, change status. Record game score in stats.
+        if all(score is score.CORRECT for _, score in scored_guess):
             self.stats.append(self.round)
             self.status = 'solved'
         elif self.round == self.max_rounds:
             self.stats.append(0)
             self.status = 'game over'
 
-        # update tracker, increment round
-        self.update_tracker(scored_guess)
+        # increment round
         self.round += 1
-
-        return scored_guess
 
     def update_tracker(self, scored_guess):
         """
