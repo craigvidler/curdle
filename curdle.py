@@ -85,6 +85,7 @@ def main(stdscr):
     # set up letter tracker
     draw_tracker(stdscr)
 
+    # FIXME print answer during dev only
     stdscr.addstr(2, 0, wordle.answer)
 
     # for each row in guess table
