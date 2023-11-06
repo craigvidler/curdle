@@ -35,8 +35,8 @@ def draw_tracker(stdscr, tracker=None):
 def main(stdscr):
 
     # set up curses
-    curses.use_default_colors()
-    curses.curs_set(False)
+    curses.use_default_colors()  # is this necessary?
+    curses.curs_set(False)  # no cursor
 
     # set up centring
     center_x = curses.COLS // 2
@@ -97,7 +97,12 @@ def main(stdscr):
         # FIXME mess-but-works prototype standard, clean up
         while True:
             length = len(guess)
-            key = stdscr.getkey()
+
+            # try/except here because window resize will crash getkey() withut it
+            try:
+                key = stdscr.getkey()
+            except curses.error:
+                pass
 
             # BACKSPACE. KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case
             if key in ('KEY_BACKSPACE', '\x7F', '\b') and guess:
