@@ -5,7 +5,7 @@ front end (the client code using this class).
 See README.md for details.
 """
 
-from enum import IntEnum
+from enum import Enum, IntEnum
 from random import shuffle
 from string import ascii_lowercase as a_to_z
 
@@ -15,6 +15,13 @@ class Score(IntEnum):
     ABSENT = 1
     PRESENT = 2
     CORRECT = 3
+
+
+class Status(Enum):
+    START = 'start'
+    PLAYING = 'playing'
+    GAMEOVER = 'game over'
+    SOLVED = 'solved'
 
 
 class Wordle:
@@ -28,7 +35,7 @@ class Wordle:
         self.guesses_file = guesses_file or 'data/valid_guesses.txt'
         self.valid_guesses = set(self.load_wordlist(self.guesses_file))
 
-        self.status = 'start'  # can also be 'playing', 'solved', 'game over'
+        self.status = Status.START
         self.round = 0
         self.max_rounds = 6
         self.letter_tracker = {}  # record guessed letters
@@ -52,7 +59,7 @@ class Wordle:
 
         self.answer = self.valid_answers.pop()
         self.round = 1
-        self.status = 'playing'
+        self.status = Status.PLAYING
 
     def score_guess(self, guess):
 
@@ -97,12 +104,12 @@ class Wordle:
     def update_game(self, scored_guess):
 
         # If solved or game over, change status. Record game score in stats.
-        if all(score is score.CORRECT for _, score in scored_guess):
+        if all(score is Score.CORRECT for _, score in scored_guess):
             self.stats.append(self.round)
-            self.status = 'solved'
+            self.status = Status.SOLVED
         elif self.round == self.max_rounds:
             self.stats.append(0)
-            self.status = 'game over'
+            self.status = Status.GAMEOVER
 
         # increment round
         self.round += 1

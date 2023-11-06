@@ -109,13 +109,13 @@ def main():
         output(wordle.letter_tracker.items(), end='\n\n')
 
         # check whether solved or game over
-        if wordle.status == 'solved':
+        if wordle.status.name == 'SOLVED':
             print('Correct! ', end='')
-        elif wordle.status == 'game over':
+        elif wordle.status.name == 'GAMEOVER':
             print(f'Game over. The answer was "{wordle.answer}". ', end='')
 
         # menu if not playing
-        if wordle.status != 'playing':
+        if not wordle.status.name == 'PLAYING':
             menu()
 
 
