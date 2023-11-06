@@ -48,7 +48,7 @@ def main(stdscr):
     curses.init_pair(2, 255, 239)  # white/dark grey
     curses.init_pair(3, 255, 136)  # white/yellow
     curses.init_pair(4, 255, 28)  # white/green
-    curses.init_pair(5, 239, 255)  # dark grey/white
+    curses.init_pair(5, 234, 255)  # dark grey/white
     curses.init_pair(6, 247, 239)  # mid grey/dark grey
 
     LGREY = curses.color_pair(1) | curses.A_BOLD
@@ -102,7 +102,7 @@ def main(stdscr):
             # BACKSPACE. KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case
             if key in ('KEY_BACKSPACE', '\x7F', '\b') and guess:
                 guess = guess[:-1]
-                stdscr.addstr(5 + round * 2, guess_x + (length - 1) * 4, '   ', LGREY)
+                stdscr.addstr(5 + round * 2, guess_x + (length - 1) * 4, '   ', WHITE)
 
             # ENTER, should work cross-platform
             elif key in ('\n', '\r') and length == 5:
@@ -116,7 +116,7 @@ def main(stdscr):
             elif key in ascii_letters and length < 5:
                 guess += key.lower()
                 letter = f' {key.upper()} '
-                stdscr.addstr(5 + round * 2, guess_x + length * 4, letter, DGREY)
+                stdscr.addstr(5 + round * 2, guess_x + length * 4, letter, WHITE)
 
         draw_tracker(stdscr, wordle.letter_tracker)
 

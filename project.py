@@ -95,7 +95,7 @@ def main():
 
     while wordle.round <= wordle.max_rounds:
         if wordle.round == 1:
-            print(wordle.answer)  # for testing, remove for production
+            print(wordle.answer)  # FIXME remove for production
         guess = input(f'Guess #{wordle.round}: ').lower()
 
         scored_guess = wordle.submit(guess)
