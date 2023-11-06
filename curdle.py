@@ -114,7 +114,7 @@ def main(stdscr):
                     break
 
             elif key in ascii_letters and length < 5:
-                guess += key
+                guess += key.lower()
                 letter = f' {key.upper()} '
                 stdscr.addstr(5 + round * 2, guess_x + length * 4, letter, DGREY)
 
@@ -127,7 +127,7 @@ def main(stdscr):
         stdscr.addstr(3, 0, f'Game over! The word was "{wordle.answer}". ')
 
     stdscr.addstr('Press any key to exit.')
-    stdscr.getkey()
+    stdscr.getch()
 
 
 curses.wrapper(main)

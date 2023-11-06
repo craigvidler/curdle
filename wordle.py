@@ -89,6 +89,7 @@ class Wordle:
         """
 
         # validate guess
+        guess = guess.lower()
         if guess not in self.valid_guesses:
             return None
 
