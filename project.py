@@ -1,4 +1,4 @@
-from wordle import Wordle
+from wordle import Wordle, Status, Score
 from itertools import groupby
 from collections import Counter
 
@@ -21,7 +21,7 @@ wordle.new_game()
 
 def output(scored_list: list, end: str):
     for letter, score in scored_list:
-        text_color = BLACK_TEXT if score.name == 'UNGUESSED' else WHITE_TEXT
+        text_color = BLACK_TEXT if score is Score.UNGUESSED else WHITE_TEXT
         bg_color = BG_COLORS[score.value]
         print(f'{bg_color}{BOLD}{text_color} {letter.upper()} {RESET}', end='')
     print(end, end='')
@@ -109,13 +109,13 @@ def main():
         output(wordle.letter_tracker.items(), end='\n\n')
 
         # check whether solved or game over
-        if wordle.status.name == 'SOLVED':
+        if wordle.status is Status.SOLVED:
             print('Correct! ', end='')
-        elif wordle.status.name == 'GAMEOVER':
+        elif wordle.status is Status.GAMEOVER:
             print(f'Game over. The answer was "{wordle.answer}". ', end='')
 
         # menu if not playing
-        if not wordle.status.name == 'PLAYING':
+        if wordle.status is not Status.PLAYING:
             menu()
 
 
