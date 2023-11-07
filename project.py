@@ -19,12 +19,13 @@ wordle = Wordle()
 wordle.new_game()
 
 
-def output(scored_list: list, end: str):
+def colorize(scored_list: list):
+    output = ''
     for letter, score in scored_list:
         text_color = BLACK_TEXT if score is Score.UNGUESSED else WHITE_TEXT
         bg_color = BG_COLORS[score.value]
-        print(f'{bg_color}{BOLD}{text_color} {letter.upper()} {RESET}', end='')
-    print(end, end='')
+        output += f'{bg_color}{BOLD}{text_color} {letter.upper()} {RESET}'
+    return output
 
 
 def menu():
@@ -103,10 +104,9 @@ def main():
             print('Not a valid word\n')
             continue
 
-        # output() expects a list of tuple pairs in the form
-        # [(letter, score)…], plus any end output.
-        output(scored_guess, end='   ')
-        output(wordle.letter_tracker.items(), end='\n\n')
+        # colorize() expects a list of tuple pairs like [(letter, score)…]
+        print(colorize(scored_guess), '  ', end='')
+        print(colorize(wordle.letter_tracker.items()), '\n')
 
         # check whether solved or game over
         if wordle.status is Status.SOLVED:
