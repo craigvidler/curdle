@@ -80,8 +80,10 @@ def histo(stats: list):
     output = ''
     totals = Counter(stats)
 
-    # extract biggest value upfront, bars sized proportionally to it
-    biggest = max(v for k, v in totals.items() if k > 0)
+    # extract biggest value (ie most common score) upfront (other bars sized
+    # proportionally to it). Provide a default in case there's no non-zero
+    # score yet (`max([])` causes error).
+    biggest = max([v for k, v in totals.items() if k > 0], default=1)
 
     # Ensure all keys 1-6 are present, with a 0 default val
     for k, v in [(i, totals.get(i, 0)) for i in range(1, 7)]:
