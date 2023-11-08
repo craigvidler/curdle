@@ -24,6 +24,20 @@ class Status(Enum):
     SOLVED = 'solved'
 
 
+class Error(Enum):
+    TOOSHORT = 'Not enough letters'
+    INVALID = 'Not in word list'
+
+
+class Rating(Enum):
+    Genius = 1
+    Magnificent = 2
+    Impressive = 3
+    Splendid = 4
+    Great = 5
+    Phew = 6
+
+
 class Wordle:
 
     def __init__(self, answers_file='', guesses_file=''):
@@ -85,35 +99,50 @@ class Wordle:
     def submit(self, guess):
         """
         take in a guess, validate it, score it in comparison to the answer,
-        return a scored guess as a list of tuples.
+        return a scored guess as a list of tuples, plus a response.
         """
+        response = ''
+        guess = guess.lower()
 
         # validate guess
-        guess = guess.lower()
-        if guess not in self.valid_guesses:
-            return None
+        if len(guess) < 5:
+            return None, Error.TOOSHORT
+        elif guess not in self.valid_guesses:
+            return None, Error.INVALID
 
         # score it
         scored_guess = self.score_guess(guess)
 
         # update game, tracker
-        self.update_game(scored_guess)
+        response = self.update_game(scored_guess)
         self.update_tracker(scored_guess)
 
-        return scored_guess
+        return scored_guess, response
 
     def update_game(self, scored_guess):
+        """
+        If solved or game over, change status. Record game score in stats.
+        Return apprpriate response.
+        """
 
-        # If solved or game over, change status. Record game score in stats.
+        response = ''
+
+        # solved
         if all(score is Score.CORRECT for _, score in scored_guess):
             self.stats.append(self.round)
             self.status = Status.SOLVED
+            response = Rating(self.round).name
+
+        # game over
         elif self.round == self.max_rounds:
             self.stats.append(0)
             self.status = Status.GAMEOVER
+            response = self.answer.upper()
 
         # increment round
         self.round += 1
+
+        return response
 
     def update_tracker(self, scored_guess):
         """

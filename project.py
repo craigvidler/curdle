@@ -20,6 +20,7 @@ wordle.new_game()
 
 
 def colorize(scored_list: list):
+    """expect a list of tuple pairs [(letter, score)…], return color version"""
     output = ''
     for letter, score in scored_list:
         text_color = BLACK_TEXT if score is Score.UNGUESSED else WHITE_TEXT
@@ -93,29 +94,27 @@ def histo(stats: list):
 
 
 def main():
+    """main loop, manages interface between UI and wordle object"""
 
-    while wordle.round <= wordle.max_rounds:
-        if wordle.round == 1:
-            print(wordle.answer)  # FIXME remove for production
+    # loop every round
+    while wordle.status is Status.PLAYING:
+
+        # input
         guess = input(f'Guess #{wordle.round}: ').lower()
 
-        scored_guess = wordle.submit(guess)
+        # submit input; output error message if any
+        scored_guess, response = wordle.submit(guess)
         if not scored_guess:
-            print('Not a valid word\n')
+            print(response.value, '\n')
             continue
 
-        # colorize() expects a list of tuple pairs like [(letter, score)…]
+        # output colored guess and updated tracker if valid guess
         print(colorize(scored_guess), '  ', end='')
         print(colorize(wordle.letter_tracker.items()), '\n')
 
-        # check whether solved or game over
-        if wordle.status is Status.SOLVED:
-            print('Correct! ', end='')
-        elif wordle.status is Status.GAMEOVER:
-            print(f'Game over. The answer was "{wordle.answer}". ', end='')
-
-        # menu if not playing
+        # output message if solved or game over, enable menu
         if wordle.status is not Status.PLAYING:
+            print(response)
             menu()
 
 
