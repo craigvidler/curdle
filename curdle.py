@@ -1,8 +1,11 @@
 import curses
 from string import ascii_letters
+import sys
 from wordle import Wordle
 
-wordle = Wordle()
+# Game object. Pass in answer if required during dev
+answer = sys.argv[1] if len(sys.argv) > 1 else ''
+wordle = Wordle(answer)
 wordle.new_game()
 
 
