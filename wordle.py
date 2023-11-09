@@ -40,11 +40,12 @@ class Rating(Enum):
 
 class Wordle:
 
-    def __init__(self):
+    def __init__(self, answer=''):
         """Set up a Wordle instance."""
+
         self.answers_file = 'data/valid_answers.txt'
         self.valid_answers = []  # answers handled in new_game()
-        self.answer = None
+        self.answer = answer
 
         self.guesses_file = 'data/valid_guesses.txt'
         self.valid_guesses = set(self.load_wordlist(self.guesses_file))
@@ -71,7 +72,8 @@ class Wordle:
             self.valid_answers = self.load_wordlist(self.answers_file)
             shuffle(self.valid_answers)
 
-        self.answer = self.valid_answers.pop()
+        # If an answer has been passed in, use that. Get one if not.
+        self.answer = self.answer or self.valid_answers.pop()
         self.round = 1
         self.state = State.PLAYING
 

@@ -1,6 +1,7 @@
-from wordle import Wordle, State, LetterScore
-from itertools import groupby
 from collections import Counter
+from itertools import groupby
+import sys
+from wordle import Wordle, State, LetterScore
 
 # ANSI codes for background colours and text
 LIGHT_GREY = '\u001b[48;5;245m'
@@ -94,7 +95,8 @@ def histo(stats: list):
 def main():
     """main loop, manages interface between UI and wordle object"""
 
-    wordle = Wordle()
+    answer = sys.argv[1] if len(sys.argv) > 1 else ''
+    wordle = Wordle(answer)
     wordle.new_game()
 
     # loop every round

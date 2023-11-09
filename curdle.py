@@ -86,7 +86,7 @@ def main(stdscr):
     draw_tracker(stdscr)
 
     # FIXME print answer during dev only
-    stdscr.addstr(2, 0, wordle.answer)
+    # stdscr.addstr(2, 0, wordle.answer)
 
     # for each row in guess table
     for round in range(6):
