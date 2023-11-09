@@ -53,7 +53,7 @@ def main(stdscr):
     curses.init_pair(3, 255, 136)  # white/yellow
     curses.init_pair(4, 255, 28)  # white/green
     curses.init_pair(5, 234, 255)  # dark grey/white
-    curses.init_pair(6, 247, 239)  # mid grey/dark grey
+    curses.init_pair(6, 249, 239)  # mid grey/dark grey
 
     LGREY = curses.color_pair(1) | curses.A_BOLD
     DGREY = curses.color_pair(2) | curses.A_BOLD
@@ -61,7 +61,6 @@ def main(stdscr):
     GREEN = curses.color_pair(4) | curses.A_BOLD
     WHITE = curses.color_pair(5) | curses.A_BOLD
     MGREY = curses.color_pair(6)
-    DGREY_NO_BOLD = curses.color_pair(2)
 
     colors = (LGREY, DGREY, YELLOW, GREEN)
 
@@ -71,14 +70,14 @@ def main(stdscr):
     stdscr.addstr(0, center_x - len(title) // 2, title, DGREY)
 
     # menu. FIXME FFS
-    menu = 'help  stats  quit'
+    menu = '<esc> for menu'
     stdscr.addstr(0, curses.COLS - len(menu) - 1, '', DGREY)
-    menu = ('h', 'elp', '  ', 's', 'tats', '  ', 'q', 'uit')
-    for item in menu:
-        if len(item) == 1:
-            stdscr.addstr(item, DGREY_NO_BOLD)
+
+    for item in menu.split(' '):
+        if item == '<esc>':
+            stdscr.addstr(item, DGREY)
         else:
-            stdscr.addstr(item, MGREY)
+            stdscr.addstr(' ' + item, MGREY)
 
     # set up guesses board
     for i in range(6):
