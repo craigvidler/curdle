@@ -40,13 +40,13 @@ class Rating(Enum):
 
 class Wordle:
 
-    def __init__(self, answers_file='', guesses_file=''):
-        """Sets up a Wordle instance. Wordlists can be overridden here."""
-        self.answers_file = answers_file or 'data/valid_answers.txt'
+    def __init__(self):
+        """Set up a Wordle instance."""
+        self.answers_file = 'data/valid_answers.txt'
         self.valid_answers = []  # answers handled in new_game()
         self.answer = None
 
-        self.guesses_file = guesses_file or 'data/valid_guesses.txt'
+        self.guesses_file = 'data/valid_guesses.txt'
         self.valid_guesses = set(self.load_wordlist(self.guesses_file))
 
         self.state = State.START
