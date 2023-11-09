@@ -1,8 +1,6 @@
 """
-Models the core game logic of Wordle. User input and display are left to a
-front end (the client code using this class).
-
-See README.md for details.
+Models the core game logic of Wordle. UI is left to a front end (the client
+code using this class). See README.md for details.
 """
 
 from enum import Enum, IntEnum, StrEnum
@@ -10,6 +8,7 @@ from random import shuffle
 from string import ascii_lowercase as a_to_z
 
 
+# Using an IntEnum so we can do > comparison.
 class LetterScore(IntEnum):
     UNGUESSED = 0
     ABSENT = 1
@@ -24,6 +23,8 @@ class State(Enum):
     SOLVED = 'solved'
 
 
+# (StrEnum requires Py3.11.) Allows us to use concise references to access
+# error messages outside module without imports or `.value`.
 class Error(StrEnum):
     TOOSHORT = 'Not enough letters'
     INVALID = 'Not in word list'
@@ -40,7 +41,7 @@ class Rating(Enum):
 
 class Wordle:
 
-    def __init__(self, answer=''):
+    def __init__(self, answer: str = ''):
         """Set up a Wordle instance."""
 
         self.answers_file = 'data/valid_answers.txt'
@@ -56,7 +57,8 @@ class Wordle:
         self.letter_tracker = {}  # record guessed letters
         self.stats = []  # record game results per session
 
-    def load_wordlist(self, filename):
+    def load_wordlist(self, filename: str):
+        """Load a wordlist and return it in a list."""
         with open(filename) as f:
             return f.read().splitlines()
 
@@ -77,20 +79,23 @@ class Wordle:
         self.round = 1
         self.state = State.PLAYING
 
-    def score_guess(self, guess):
+    def score_guess(self, guess: str):
+        """Take a guess and compare it with the answer to score it. Return a
+        scored guess, a list of tuple pairs [(letter, score)…] where score
+        is either ABSENT (dark grey), PRESENT (yellow) or CORRECT (green)."""
 
-        # default all letters in guess to ABSENT (1/guessed/dark grey),
-        # copy answer to a list (so we can remove letters)
+        # Default all letters in guess to ABSENT (1/dark grey); copy answer to
+        # a list (so we can remove letters).
         scored_guess = [(letter, LetterScore.ABSENT) for letter in guess]
         answer_letters = list(self.answer)
 
-        # first find CORRECT letters (ie 3/green)
+        # first find CORRECT (3, green) letters
         for i, (guess_letter, answer_letter) in enumerate(zip(guess, self.answer)):
             if guess_letter == answer_letter:
                 scored_guess[i] = (guess_letter, LetterScore.CORRECT)
                 answer_letters.remove(guess_letter)
 
-        # then find PRESENT letters (ie 2/yellow)
+        # then find PRESENT (2, yellow) letters
         for i, (guess_letter, score) in enumerate(scored_guess):
             if guess_letter in answer_letters and score is not LetterScore.CORRECT:
                 scored_guess[i] = (guess_letter, LetterScore.PRESENT)
@@ -98,7 +103,7 @@ class Wordle:
 
         return scored_guess
 
-    def submit(self, guess):
+    def submit(self, guess: str):
         """
         take in a guess, validate it, score it in comparison to the answer,
         return a scored guess as a list of tuples, plus a response.
@@ -121,7 +126,7 @@ class Wordle:
 
         return scored_guess, response
 
-    def update_game(self, scored_guess):
+    def update_game(self, scored_guess: list):
         """
         If solved or game over, change state. Record game score in stats.
         Return appropriate response.
@@ -146,7 +151,7 @@ class Wordle:
 
         return response
 
-    def update_tracker(self, scored_guess):
+    def update_tracker(self, scored_guess: list):
         """
         Update tracker with each letter from `scored_guess`.
         Only change a letter's score if it's to a higher one.
