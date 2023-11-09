@@ -1,6 +1,7 @@
 import curses
 from string import ascii_letters
 import sys
+import time
 from wordle import Wordle
 
 # Game object. Pass in answer if required during dev
@@ -41,7 +42,7 @@ def main(stdscr):
     curses.use_default_colors()  # is this necessary?
     curses.curs_set(False)  # no cursor
 
-    # set up centring
+    # set up x-centering
     center_x = curses.COLS // 2
     guess_width = 19
     guess_x = center_x - guess_width // 2
@@ -88,7 +89,7 @@ def main(stdscr):
     # set up letter tracker
     draw_tracker(stdscr)
 
-    # FIXME print answer during dev only
+    # FIXME: print answer during dev only
     # stdscr.addstr(2, 0, wordle.answer)
 
     # for each row in guess table
@@ -97,7 +98,7 @@ def main(stdscr):
         guess = ''
 
         # loop while in row until a valid guess is entered
-        # FIXME mess-but-works prototype standard, clean up
+        # FIXME: mess-but-works prototype standard, clean up
         while True:
             length = len(guess)
 
@@ -113,13 +114,15 @@ def main(stdscr):
                 stdscr.addstr(5 + round * 2, guess_x + (length - 1) * 4, '   ', WHITE)
 
             # ENTER, should work cross-platform
-            elif key in ('\n', '\r') and length == 5:
+            elif key in ('\n', '\r'):
                 scored_guess, response = wordle.submit(guess)
                 if scored_guess:
                     for i, (letter, score) in enumerate(scored_guess):
                         letter = f' {letter.upper()} '
                         stdscr.addstr(5 + round * 2, guess_x + i * 4, letter, colors[score])
                     break
+                else:
+                    stdscr.addstr(2, 0, response)
 
             elif key in ascii_letters and length < 5:
                 guess += key.lower()
@@ -129,12 +132,11 @@ def main(stdscr):
         draw_tracker(stdscr, wordle.letter_tracker)
 
         if guess == wordle.answer:
-            stdscr.addstr(3, 0, 'Correct! ')
+            stdscr.addstr(2, 0, response)
             break
     else:
-        stdscr.addstr(3, 0, f'Game over! The word was "{wordle.answer}". ')
+        stdscr.addstr(2, 0, wordle.answer.upper())
 
-    stdscr.addstr('Press any key to exit.')
     stdscr.getch()
 
 
