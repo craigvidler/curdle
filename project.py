@@ -15,6 +15,11 @@ WHITE_TEXT = '\u001b[37m'
 BOLD = '\u001b[1m'
 RESET = '\u001b[0m'
 
+# Game object. Pass in answer if required during dev
+answer = sys.argv[1] if len(sys.argv) > 1 else ''
+wordle = Wordle(answer)
+wordle.new_game()
+
 
 def colorize(scored_list: list):
     """expect a list of tuple pairs [(letter, score)…], return color version"""
@@ -26,7 +31,7 @@ def colorize(scored_list: list):
     return output
 
 
-def menu(wordle: Wordle):
+def menu():
     while True:
         command = input('[N]ew game, [S]tats, or [Q]uit: ').lower()
         if command == 'q':
@@ -95,10 +100,6 @@ def histo(stats: list):
 def main():
     """main loop, manages interface between UI and wordle object"""
 
-    answer = sys.argv[1] if len(sys.argv) > 1 else ''
-    wordle = Wordle(answer)
-    wordle.new_game()
-
     # loop every round
     while wordle.state is State.PLAYING:
 
@@ -118,7 +119,7 @@ def main():
         # output message if solved or game over, enable menu
         if wordle.state is not State.PLAYING:
             print(response)
-            menu(wordle)
+            menu()
 
 
 if __name__ == '__main__':
