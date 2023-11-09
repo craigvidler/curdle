@@ -28,7 +28,7 @@ def draw_tracker(stdscr, tracker=None):
         for j, letter in enumerate(row):
             # if tracker:
             #     print(tracker[letter])
-            color = LGREY if not tracker else colors[tracker[letter].value]
+            color = LGREY if not tracker else colors[tracker[letter]]
             stdscr.addstr(y, tracker_x + j * 4, f' {letter.upper()} ', color)
 
 
@@ -98,7 +98,7 @@ def main(stdscr):
         while True:
             length = len(guess)
 
-            # try/except here because window resize will crash getkey() withut it
+            # try/except here because window resize will crash getkey() without it
             try:
                 key = stdscr.getkey()
             except curses.error:
@@ -111,11 +111,11 @@ def main(stdscr):
 
             # ENTER, should work cross-platform
             elif key in ('\n', '\r') and length == 5:
-                scored_guess = wordle.submit(guess)
+                scored_guess, response = wordle.submit(guess)
                 if scored_guess:
                     for i, (letter, score) in enumerate(scored_guess):
                         letter = f' {letter.upper()} '
-                        stdscr.addstr(5 + round * 2, guess_x + i * 4, letter, colors[score.value])
+                        stdscr.addstr(5 + round * 2, guess_x + i * 4, letter, colors[score])
                     break
 
             elif key in ascii_letters and length < 5:
