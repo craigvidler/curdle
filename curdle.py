@@ -10,6 +10,15 @@ wordle = Wordle(answer)
 wordle.new_game()
 
 
+def popup(window, message):
+    window.clear()
+    window.addstr(message)
+    window.refresh()
+    time.sleep(2)
+    window.clear()
+    window.refresh()
+
+
 def draw_tracker(stdscr, tracker=None):
     LGREY = curses.color_pair(1) | curses.A_BOLD
     DGREY = curses.color_pair(2) | curses.A_BOLD
@@ -34,6 +43,8 @@ def draw_tracker(stdscr, tracker=None):
             #     print(tracker[letter])
             color = LGREY if not tracker else colors[tracker[letter]]
             stdscr.addstr(y, tracker_x + j * 4, f' {letter.upper()} ', color)
+
+    stdscr.refresh()
 
 
 def main(stdscr):
@@ -79,6 +90,9 @@ def main(stdscr):
         else:
             stdscr.addstr(' ' + item, MGREY)
 
+    # create a new window for response output
+    popup_window = curses.newwin(1, 32, 2, 0)
+
     # set up guesses board
     for i in range(6):
         y = 5 + i * 2
@@ -87,9 +101,6 @@ def main(stdscr):
 
     # set up letter tracker
     draw_tracker(stdscr)
-
-    # FIXME: print answer during dev only
-    # stdscr.addstr(2, 0, wordle.answer)
 
     # for each row in guess table
     for round in range(6):
@@ -119,10 +130,12 @@ def main(stdscr):
                     for i, (letter, score) in enumerate(scored_guess):
                         letter = f' {letter.upper()} '
                         stdscr.addstr(5 + round * 2, guess_x + i * 4, letter, colors[score])
+                    stdscr.refresh()
                     break
                 else:
-                    stdscr.addstr(2, 0, response)
+                    popup(popup_window, response)
 
+            # if valid letter entry, display it in white box
             elif key in ascii_letters and length < 5:
                 guess += key.lower()
                 letter = f' {key.upper()} '
@@ -131,10 +144,10 @@ def main(stdscr):
         draw_tracker(stdscr, wordle.letter_tracker)
 
         if guess == wordle.answer:
-            stdscr.addstr(2, 0, response)
+            popup(popup_window, response)
             break
     else:
-        stdscr.addstr(2, 0, wordle.answer.upper())
+        popup(popup_window, wordle.answer.upper())
 
     stdscr.getch()
 
