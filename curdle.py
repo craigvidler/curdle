@@ -16,11 +16,15 @@ def clear_popup(window):
 
 
 def popup(window, timer, message):
+    offset = 21 // 2 - len(message) // 2
+
     if timer:
         timer.cancel()
+
     window.clear()
-    window.addstr(message)
+    window.addstr(0, offset, message)
     window.refresh()
+
     timer = Timer(2, clear_popup, args=(window,))
     timer.start()
     return timer
@@ -40,7 +44,7 @@ def draw_tracker(stdscr, tracker=None):
     letters = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm']
 
     for i, row in enumerate(letters):
-        y = 18 + i * 2
+        y = 19 + i * 2
         if i == 1:
             tracker_x += 2
         if i == 2:
@@ -97,15 +101,15 @@ def main(stdscr):
         else:
             stdscr.addstr(' ' + item, MGREY)
 
-    # create new window for response output and timer that controls it
-    popup_window = curses.newwin(1, 32, 2, 0)
-    timer = None
-
     # set up guesses board
     for i in range(6):
         y = 5 + i * 2
         for j in range(5):
             stdscr.addstr(y, guess_x + j * 4, '   ', WHITE)
+
+    # create new window for response output and timer that controls it
+    popup_window = curses.newwin(1, 21, 17, center_x - 10)
+    timer = None
 
     # set up letter tracker
     draw_tracker(stdscr)
