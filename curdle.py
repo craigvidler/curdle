@@ -157,7 +157,7 @@ def main(stdscr):
             break
     else:
         # game over
-        popup(popup_window, timer, wordle.answer.upper())
+        popup(popup_window, timer, response)
 
     stdscr.getch()
 
