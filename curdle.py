@@ -10,6 +10,39 @@ wordle = Wordle(answer)
 wordle.new_game()
 
 
+class Color():
+    # Can't create colors till after curses initialised by main wrapper,
+    # making them difficult to define as global constants as I'd like; this
+    # is an alternative. Enum hard to work with here so just raw class.
+    # Actual colors set in setup_colors().
+    pass
+
+
+def setup_curses():
+    curses.use_default_colors()  # is this necessary?
+    curses.curs_set(False)  # no cursor
+
+
+def setup_colors():
+    color_pairs = {
+        'BL_WHITE': (234, 255),  # blackish on white
+        'BL_LGREY': (234, 250),  # blackish on light grey
+        'WH_DGREY': (255, 239),  # white on dark grey
+        'WH_YELLOW': (255, 136),  # white on yellow
+        'WH_GREEN': (255, 28),  # white on green
+        'LG_DGREY': (250, 239)  # light grey on dark grey
+    }
+
+    # Example: 'BL_WHITE': (234, 255) ->
+    # curses.init_pair(1, 234, 255)
+    # Color.BL_WHITE = curses.color_pair(1) | curses.A_BOLD
+    i = 1  # next line too ugly using enumerate
+    for name, (fg_color, bg_color) in color_pairs.items():
+        curses.init_pair(i, fg_color, bg_color)
+        setattr(Color, name, curses.color_pair(i) | curses.A_BOLD)
+        i += 1
+
+
 def clear_popup(window):
     window.clear()
     window.refresh()
@@ -31,11 +64,7 @@ def popup(window, timer, message):
 
 
 def draw_tracker(stdscr, tracker=None):
-    LGREY = curses.color_pair(1) | curses.A_BOLD
-    DGREY = curses.color_pair(2) | curses.A_BOLD
-    YELLOW = curses.color_pair(3) | curses.A_BOLD
-    GREEN = curses.color_pair(4) | curses.A_BOLD
-    colors = (LGREY, DGREY, YELLOW, GREEN)
+    colors = (Color.BL_LGREY, Color.WH_DGREY, Color.WH_YELLOW, Color.WH_GREEN)
 
     center_x = curses.COLS // 2
     tracker_width = 39
@@ -52,60 +81,43 @@ def draw_tracker(stdscr, tracker=None):
         for j, letter in enumerate(row):
             # if tracker:
             #     print(tracker[letter])
-            color = LGREY if not tracker else colors[tracker[letter]]
+            color = Color.BL_LGREY if not tracker else colors[tracker[letter]]
             stdscr.addstr(y, tracker_x + j * 4, f' {letter.upper()} ', color)
 
     stdscr.refresh()
 
 
 def main(stdscr):
-
-    # set up curses
-    curses.use_default_colors()  # is this necessary?
-    curses.curs_set(False)  # no cursor
+    setup_curses()
+    setup_colors()
 
     # set up x-centering
     center_x = curses.COLS // 2
     guess_width = 19
     guess_x = center_x - guess_width // 2
 
-    # set up colours
-    curses.init_pair(1, 234, 250)  # very dark grey/light grey
-    curses.init_pair(2, 255, 239)  # white/dark grey
-    curses.init_pair(3, 255, 136)  # white/yellow
-    curses.init_pair(4, 255, 28)  # white/green
-    curses.init_pair(5, 234, 255)  # dark grey/white
-    curses.init_pair(6, 249, 239)  # mid grey/dark grey
-
-    LGREY = curses.color_pair(1) | curses.A_BOLD
-    DGREY = curses.color_pair(2) | curses.A_BOLD
-    YELLOW = curses.color_pair(3) | curses.A_BOLD
-    GREEN = curses.color_pair(4) | curses.A_BOLD
-    WHITE = curses.color_pair(5) | curses.A_BOLD
-    MGREY = curses.color_pair(6)
-
-    colors = (LGREY, DGREY, YELLOW, GREEN)
+    colors = (Color.BL_LGREY, Color.WH_DGREY, Color.WH_YELLOW, Color.WH_GREEN)
 
     # title bar
     title = 'curdle'
-    stdscr.addstr(0, 0, ' ' * curses.COLS, DGREY)
-    stdscr.addstr(0, center_x - len(title) // 2, title, DGREY)
+    stdscr.addstr(0, 0, ' ' * curses.COLS, Color.WH_DGREY)
+    stdscr.addstr(0, center_x - len(title) // 2, title, Color.WH_DGREY)
 
     # menu. FIXME FFS
     menu = '<esc> for menu'
-    stdscr.addstr(0, curses.COLS - len(menu) - 1, '', DGREY)
+    stdscr.addstr(0, curses.COLS - len(menu) - 1, '', Color.WH_DGREY)
 
     for item in menu.split(' '):
         if item == '<esc>':
-            stdscr.addstr(item, DGREY)
+            stdscr.addstr(item, Color.WH_DGREY)
         else:
-            stdscr.addstr(' ' + item, MGREY)
+            stdscr.addstr(' ' + item, Color.LG_DGREY)
 
     # set up guesses board
     for i in range(6):
         y = 5 + i * 2
         for j in range(5):
-            stdscr.addstr(y, guess_x + j * 4, '   ', WHITE)
+            stdscr.addstr(y, guess_x + j * 4, '   ', Color.BL_WHITE)
 
     # create new window for response output and timer that controls it
     popup_window = curses.newwin(1, 21, 17, center_x - 10)
@@ -133,7 +145,7 @@ def main(stdscr):
             # if BACKSPACE (KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case)
             if key in ('KEY_BACKSPACE', '\x7F', '\b') and guess:
                 guess = guess[:-1]
-                stdscr.addstr(5 + round * 2, guess_x + (length - 1) * 4, '   ', WHITE)
+                stdscr.addstr(5 + round * 2, guess_x + (length - 1) * 4, '   ', Color.BL_WHITE)
 
             # if ENTER (should work cross-platform)
             elif key in ('\n', '\r'):
@@ -151,7 +163,7 @@ def main(stdscr):
             elif key in ascii_letters and length < 5:
                 guess += key.lower()
                 letter = f' {key.upper()} '
-                stdscr.addstr(5 + round * 2, guess_x + length * 4, letter, WHITE)
+                stdscr.addstr(5 + round * 2, guess_x + length * 4, letter, Color.BL_WHITE)
 
         draw_tracker(stdscr, wordle.letter_tracker)
 
