@@ -3,31 +3,35 @@ Models the core game logic of Wordle. UI is left to a front end (the client
 code using this class). See README.md for details.
 """
 
-from enum import Enum, IntEnum, StrEnum
+from enum import Enum, IntEnum
 from random import shuffle
 from string import ascii_lowercase as a_to_z
 
 
-# Using an IntEnum so we can do > comparison.
+# Using an IntEnum so we can do > comparison, and to access the int value
+# outside the module without needing to import LetterScore or use .value.
 class LetterScore(IntEnum):
     UNGUESSED = 0
     ABSENT = 1
     PRESENT = 2
     CORRECT = 3
 
-
-class State(Enum):
+# StrEnum preferable here for ease of use (no imports or .value needed outside
+# the module), but like this avoids requiring Py3.11.
+class State(str, Enum):
     START = 'start'
     PLAYING = 'playing'
     GAMEOVER = 'game over'
     SOLVED = 'solved'
 
-
-# (StrEnum requires Py3.11.) Allows us to use concise references to access
-# error messages outside module without imports or `.value`.
-class Error(StrEnum):
+# As above. Also, __str__ because Errors will be output not just checked like
+# States, and it avoids needing `.value` below.
+class Error(str, Enum):
     TOOSHORT = 'Not enough letters'
     INVALID = 'Not in word list'
+
+    def __str__(self):
+        return self.value
 
 
 class Rating(Enum):

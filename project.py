@@ -1,7 +1,7 @@
 from collections import Counter
 from itertools import groupby
 import sys
-from wordle import Wordle, State, LetterScore
+from wordle import Wordle
 
 # ANSI codes for background colours and text
 LIGHT_GREY = '\u001b[48;5;245m'
@@ -25,8 +25,8 @@ def colorize(scored_list: list):
     """expect a list of tuple pairs [(letter, score)…], return color version"""
     output = ''
     for letter, score in scored_list:
-        text_color = BLACK_TEXT if score is LetterScore.UNGUESSED else WHITE_TEXT
-        bg_color = BG_COLORS[score.value]
+        text_color = BLACK_TEXT if not score else WHITE_TEXT
+        bg_color = BG_COLORS[score]
         output += f'{bg_color}{BOLD}{text_color} {letter.upper()} {RESET}'
     return output
 
@@ -101,7 +101,7 @@ def main():
     """main loop, manages interface between UI and wordle object"""
 
     # loop every round
-    while wordle.state is State.PLAYING:
+    while wordle.state == 'playing':
 
         # input
         guess = input(f'Guess #{wordle.round}: ').lower()
@@ -117,7 +117,7 @@ def main():
         print(colorize(wordle.letter_tracker.items()), '\n')
 
         # output message if solved or game over, enable menu
-        if wordle.state is not State.PLAYING:
+        if wordle.state != 'playing':
             print(response)
             menu()
 
