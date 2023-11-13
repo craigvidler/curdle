@@ -25,22 +25,20 @@ def setup_curses():
 
 def setup_colors():
     color_pairs = {
-        'BL_WHITE': (234, 255),  # blackish on white
-        'BL_LGREY': (234, 250),  # blackish on light grey
-        'WH_DGREY': (255, 239),  # white on dark grey
-        'WH_YELLOW': (255, 136),  # white on yellow
-        'WH_GREEN': (255, 28),  # white on green
-        'LG_DGREY': (250, 239)  # light grey on dark grey
+        'BL_WHITE': (1, 234, 255),  # blackish on white
+        'BL_LGREY': (2, 234, 250),  # blackish on light grey
+        'WH_DGREY': (3, 255, 239),  # white on dark grey
+        'WH_YELLOW': (4, 255, 136),  # white on yellow
+        'WH_GREEN': (5, 255, 28),  # white on green
+        'LG_DGREY': (6, 250, 239)  # light grey on dark grey
     }
 
-    # Example: 'BL_WHITE': (234, 255) ->
+    # Example: 'BL_WHITE': (1, 234, 255) ->
     # curses.init_pair(1, 234, 255)
     # Color.BL_WHITE = curses.color_pair(1) | curses.A_BOLD
-    i = 1  # using enumerate makes next line too ugly
-    for name, (fg_color, bg_color) in color_pairs.items():
-        curses.init_pair(i, fg_color, bg_color)
-        setattr(Color, name, curses.color_pair(i) | curses.A_BOLD)
-        i += 1
+    for name, (pair_id, fg_color, bg_color) in color_pairs.items():
+        curses.init_pair(number, fg_color, bg_color)
+        setattr(Color, name, curses.color_pair(pair_id) | curses.A_BOLD)
 
 
 def setup_title_bar(stdscr):
