@@ -36,11 +36,39 @@ def setup_colors():
     # Example: 'BL_WHITE': (234, 255) ->
     # curses.init_pair(1, 234, 255)
     # Color.BL_WHITE = curses.color_pair(1) | curses.A_BOLD
-    i = 1  # next line too ugly using enumerate
+    i = 1  # using enumerate makes next line too ugly
     for name, (fg_color, bg_color) in color_pairs.items():
         curses.init_pair(i, fg_color, bg_color)
         setattr(Color, name, curses.color_pair(i) | curses.A_BOLD)
         i += 1
+
+
+def setup_title_bar(stdscr):
+    title = 'curdle'
+    stdscr.addstr(0, 0, ' ' * curses.COLS, Color.WH_DGREY)
+    stdscr.addstr(0, curses.COLS // 2 - len(title) // 2, title, Color.WH_DGREY)
+
+    # menu. FIXME FFS
+    menu = '<esc> for menu'
+    stdscr.addstr(0, curses.COLS - len(menu) - 1, '', Color.WH_DGREY)
+
+    for item in menu.split(' '):
+        if item == '<esc>':
+            stdscr.addstr(item, Color.WH_DGREY)
+        else:
+            stdscr.addstr(' ' + item, Color.LG_DGREY)
+
+
+def setup_guesses_board(stdscr):
+    guess_width = 19
+    guess_x = curses.COLS // 2 - guess_width // 2
+
+    for i in range(6):
+        y = 5 + i * 2
+        for j in range(5):
+            stdscr.addstr(y, guess_x + j * 4, '   ', Color.BL_WHITE)
+
+    return guess_x
 
 
 def clear_popup(window):
@@ -91,33 +119,14 @@ def main(stdscr):
     setup_curses()
     setup_colors()
 
-    # set up x-centering
-    center_x = curses.COLS // 2
-    guess_width = 19
-    guess_x = center_x - guess_width // 2
-
     colors = (Color.BL_LGREY, Color.WH_DGREY, Color.WH_YELLOW, Color.WH_GREEN)
 
-    # title bar
-    title = 'curdle'
-    stdscr.addstr(0, 0, ' ' * curses.COLS, Color.WH_DGREY)
-    stdscr.addstr(0, center_x - len(title) // 2, title, Color.WH_DGREY)
+    # set up x-centering
+    center_x = curses.COLS // 2
 
-    # menu. FIXME FFS
-    menu = '<esc> for menu'
-    stdscr.addstr(0, curses.COLS - len(menu) - 1, '', Color.WH_DGREY)
+    setup_title_bar(stdscr)
 
-    for item in menu.split(' '):
-        if item == '<esc>':
-            stdscr.addstr(item, Color.WH_DGREY)
-        else:
-            stdscr.addstr(' ' + item, Color.LG_DGREY)
-
-    # set up guesses board
-    for i in range(6):
-        y = 5 + i * 2
-        for j in range(5):
-            stdscr.addstr(y, guess_x + j * 4, '   ', Color.BL_WHITE)
+    guess_x = setup_guesses_board(stdscr)
 
     # create new window for response output and timer that controls it
     popup_window = curses.newwin(1, 21, 17, center_x - 10)
