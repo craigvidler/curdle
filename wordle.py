@@ -84,9 +84,11 @@ class Wordle:
         self.state = State.PLAYING
 
     def score_guess(self, guess: str):
-        """Take a guess and compare it with the answer to score it. Return a
+        """
+        Take a guess and compare it with the answer to score it. Return a
         scored guess, a list of tuple pairs [(letter, score)…] where score
-        is either ABSENT (dark grey), PRESENT (yellow) or CORRECT (green)."""
+        is either ABSENT (dark grey), PRESENT (yellow) or CORRECT (green).
+        """
 
         # Default all letters in guess to ABSENT (1/dark grey); copy answer to
         # a list (so we can remove letters).
@@ -109,7 +111,7 @@ class Wordle:
 
     def submit(self, guess: str):
         """
-        take in a guess, validate it, score it in comparison to the answer,
+        Take in a guess, validate it, score it in comparison to the answer,
         return a scored guess as a list of tuples, plus a response.
         """
         response = ''
