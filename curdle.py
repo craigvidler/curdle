@@ -37,7 +37,7 @@ def setup_colors():
     # curses.init_pair(1, 234, 255)
     # Color.BL_WHITE = curses.color_pair(1) | curses.A_BOLD
     for name, (pair_id, fg_color, bg_color) in color_pairs.items():
-        curses.init_pair(number, fg_color, bg_color)
+        curses.init_pair(pair_id, fg_color, bg_color)
         setattr(Color, name, curses.color_pair(pair_id) | curses.A_BOLD)
 
 
@@ -113,74 +113,73 @@ def draw_tracker(stdscr, tracker=None):
     stdscr.refresh()
 
 
+def do_round(stdscr, guess_x, popup_window, timer):
+    guess = ''
+
+    # loop while in row until a valid guess is entered
+    # FIXME: mess-but-works prototype standard, clean up
+    while True:
+        length = len(guess)
+
+        # get input key
+        # try/except here because window resize will crash getkey() without it
+        try:
+            key = stdscr.getkey()
+        except curses.error:
+            pass
+
+        # if valid letter, display it in white box
+        if key in ascii_letters and length < 5:
+            guess += key.lower()
+            letter = f' {key.upper()} '
+            stdscr.addstr(5 + (wordle.round - 1) * 2, guess_x + length * 4, letter, Color.BL_WHITE)
+
+        # if BACKSPACE (KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case)
+        elif key in ('KEY_BACKSPACE', '\x7F', '\b') and guess:
+            guess = guess[:-1]
+            stdscr.addstr(5 + (wordle.round - 1) * 2, guess_x + (length - 1) * 4, '   ', Color.BL_WHITE)
+
+        # if ENTER (should work cross-platform)
+        elif key in ('\n', '\r'):
+            scored_guess, response = wordle.submit(guess)
+            if scored_guess:
+                colors = (Color.BL_LGREY, Color.WH_DGREY, Color.WH_YELLOW, Color.WH_GREEN)
+                for i, (letter, score) in enumerate(scored_guess):
+                    letter = f' {letter.upper()} '
+                    stdscr.addstr(5 + (wordle.round - 2) * 2, guess_x + i * 4, letter, colors[score])
+                stdscr.refresh()
+                break
+            else:
+                timer = popup(popup_window, timer, response)
+
+    return response, timer
+
+
 def main(stdscr):
+
+    # SETUP
     setup_curses()
     setup_colors()
 
-    colors = (Color.BL_LGREY, Color.WH_DGREY, Color.WH_YELLOW, Color.WH_GREEN)
-
-    # set up x-centering
-    center_x = curses.COLS // 2
-
     setup_title_bar(stdscr)
-
     guess_x = setup_guesses_board(stdscr)
 
     # create new window for response output and timer that controls it
-    popup_window = curses.newwin(1, 21, 17, center_x - 10)
+    popup_window = curses.newwin(1, 21, 17, curses.COLS // 2 - 10)
     timer = None
 
     # set up letter tracker
     draw_tracker(stdscr)
 
-    # for each row in guess table
-    for round in range(6):
-        guess = ''
-
-        # loop while in row until a valid guess is entered
-        # FIXME: mess-but-works prototype standard, clean up
-        while True:
-            length = len(guess)
-
-            # get input key
-            # try/except here because window resize will crash getkey() without it
-            try:
-                key = stdscr.getkey()
-            except curses.error:
-                pass
-
-            # if BACKSPACE (KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case)
-            if key in ('KEY_BACKSPACE', '\x7F', '\b') and guess:
-                guess = guess[:-1]
-                stdscr.addstr(5 + round * 2, guess_x + (length - 1) * 4, '   ', Color.BL_WHITE)
-
-            # if ENTER (should work cross-platform)
-            elif key in ('\n', '\r'):
-                scored_guess, response = wordle.submit(guess)
-                if scored_guess:
-                    for i, (letter, score) in enumerate(scored_guess):
-                        letter = f' {letter.upper()} '
-                        stdscr.addstr(5 + round * 2, guess_x + i * 4, letter, colors[score])
-                    stdscr.refresh()
-                    break
-                else:
-                    timer = popup(popup_window, timer, response)
-
-            # if valid letter, display it in white box
-            elif key in ascii_letters and length < 5:
-                guess += key.lower()
-                letter = f' {key.upper()} '
-                stdscr.addstr(5 + round * 2, guess_x + length * 4, letter, Color.BL_WHITE)
-
+    # MAIN LOOP
+    while wordle.state == 'playing':
+        response, timer = do_round(stdscr, guess_x, popup_window, timer)
         draw_tracker(stdscr, wordle.letter_tracker)
 
-        # success
-        if guess == wordle.answer:
+        # output message if solved or game over, enable menu
+        if wordle.state != 'playing':
             popup(popup_window, timer, response)
-            break
-    else:
-        # game over
-        popup(popup_window, timer, response)
+            # menu()
 
     stdscr.getch()
 
