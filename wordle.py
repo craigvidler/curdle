@@ -50,7 +50,8 @@ class Wordle:
 
         self.answers_file = 'data/valid_answers.txt'
         self.valid_answers = []  # answers handled in new_game()
-        self.answer = answer
+        self.given_answer = answer  # save answer here if passed in
+        self.answer = ''  # see new_game() and comment there
 
         self.guesses_file = 'data/valid_guesses.txt'
         self.valid_guesses = set(self.load_wordlist(self.guesses_file))
@@ -78,8 +79,10 @@ class Wordle:
             self.valid_answers = self.load_wordlist(self.answers_file)
             shuffle(self.valid_answers)
 
-        # If an answer has been passed in, use that. Get one if not.
-        self.answer = self.answer or self.valid_answers.pop()
+        # If an answer has been passed in, use that. Get one if not. Can't
+        # just set `self.answer` directly in init without `given_answer`
+        # buffer, or renewing answer in subsequent games prevented here.
+        self.answer = self.given_answer or self.valid_answers.pop()
         self.round = 1
         self.state = State.PLAYING
 
