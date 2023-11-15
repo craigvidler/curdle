@@ -6,22 +6,23 @@ from wordle import Wordle
 from enum import IntEnum
 
 
-class Curdle:
-    def __init__(self, stdscr):
-        self.stdscr = stdscr
-        self.guess_x = None
-        self.timer = None
-        self.popup = curses.newwin(1, 21, 17, curses.COLS // 2 - 10)
-        self.colors = self.setup_colors()
-        self.letter_colors = (
-            self.colors.BL_LGREY,
-            self.colors.WH_DGREY,
-            self.colors.WH_YELLOW,
-            self.colors.WH_GREEN
-        )
+class Color:
+    """
+    Set up curses color pairs in a global Color object with dot syntax.
+    Since colors can't be set up till after curses is loaded, using a global
+    enum as we'd like isn't simple. This is close and less faff.
 
-    def setup_colors(self):
-        color_pairs = {
+    Example: 'BL_WHITE': (1, 234, 255) ->
+    curses.init_pair(1, 234, 255)
+    Color.BL_WHITE = curses.color_pair(1) | curses.A_BOLD
+    """
+
+    @classmethod
+    def setup(cls):
+        """Create color pairs and class attributes from colors dict."""
+
+        colors = {
+            # name: (color pair id, text color, background color)
             'BL_WHITE': (1, 234, 255),  # blackish on white
             'BL_LGREY': (2, 234, 250),  # blackish on light grey
             'WH_DGREY': (3, 255, 239),  # white on dark grey
@@ -30,24 +31,31 @@ class Curdle:
             'LG_DGREY': (6, 250, 239)  # light grey on dark grey
         }
 
-        # Example: 'BL_WHITE': (1, 234, 255) ->
-        # curses.init_pair(1, 234, 255)
-        # {'BL_WHITE': curses.color_pair(1) | curses.A_BOLD, ...}
-        colors = {}
-        for name, (pair_id, fg_color, bg_color) in color_pairs.items():
-            curses.init_pair(pair_id, fg_color, bg_color)
-            colors[name] = curses.color_pair(pair_id) | curses.A_BOLD
-        return IntEnum('Colors', colors)
+        for name, (pair_id, text_color, bg_color) in colors.items():
+            curses.init_pair(pair_id, text_color, bg_color)
+            setattr(cls, name, curses.color_pair(pair_id) | curses.A_BOLD)
+
+        cls.letter_colors = (
+            cls.BL_LGREY, cls.WH_DGREY, cls.WH_YELLOW, cls.WH_GREEN
+        )
+
+
+class Curdle:
+    def __init__(self, stdscr):
+        self.stdscr = stdscr
+        self.guess_x = None
+        self.timer = None
+        self.popup = curses.newwin(1, 21, 17, curses.COLS // 2 - 10)
 
     def draw_title_bar(self):
         addstr = self.stdscr.addstr
         title = 'curdle'
-        addstr(0, 0, ' ' * curses.COLS, self.colors.WH_DGREY)
-        addstr(0, curses.COLS // 2 - len(title) // 2, title, self.colors.WH_DGREY)
+        addstr(0, 0, ' ' * curses.COLS, Color.WH_DGREY)
+        addstr(0, curses.COLS // 2 - len(title) // 2, title, Color.WH_DGREY)
 
         menu = '<esc> for menu'
-        addstr(0, curses.COLS - len(menu) - 1, '<esc>', self.colors.WH_DGREY)
-        addstr(' for menu', self.colors.LG_DGREY)
+        addstr(0, curses.COLS - len(menu) - 1, '<esc>', Color.WH_DGREY)
+        addstr(' for menu', Color.LG_DGREY)
 
     def draw_guesses_board(self):
         guess_width = 19
@@ -56,7 +64,7 @@ class Curdle:
         for i in range(6):
             y = 5 + i * 2
             for j in range(5):
-                self.stdscr.addstr(y, self.guess_x + j * 4, '   ', self.colors.BL_WHITE)
+                self.stdscr.addstr(y, self.guess_x + j * 4, '   ', Color.BL_WHITE)
 
     def show_popup(self, message, duration=2.5):
 
@@ -91,7 +99,7 @@ class Curdle:
             if i == 2:
                 tracker_x += 4
             for j, letter in enumerate(row):
-                color = self.colors.BL_LGREY if not tracker else self.letter_colors[tracker[letter]]
+                color = Color.BL_LGREY if not tracker else Color.letter_colors[tracker[letter]]
                 self.stdscr.addstr(y, tracker_x + j * 4, f' {letter.upper()} ', color)
 
     def do_round(self, guess):
@@ -113,12 +121,12 @@ class Curdle:
             if key in ascii_letters and length < 5:
                 guess += key.lower()
                 letter = f' {key.upper()} '
-                self.stdscr.addstr(5 + (wordle.round - 1) * 2, self.guess_x + length * 4, letter, self.colors.BL_WHITE)
+                self.stdscr.addstr(5 + (wordle.round - 1) * 2, self.guess_x + length * 4, letter, Color.BL_WHITE)
 
             # if BACKSPACE (KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case)
             elif key in ('KEY_BACKSPACE', '\x7F', '\b') and guess:
                 guess = guess[:-1]
-                self.stdscr.addstr(5 + (wordle.round - 1) * 2, self.guess_x + (length - 1) * 4, '   ', self.colors.BL_WHITE)
+                self.stdscr.addstr(5 + (wordle.round - 1) * 2, self.guess_x + (length - 1) * 4, '   ', Color.BL_WHITE)
 
             # if ENTER (should work cross-platform)
             elif key in ('\n', '\r'):
@@ -126,7 +134,7 @@ class Curdle:
                 return scored_guess, response, guess
 
     def menu(self):
-        self.show_popup('[N]ew game/[Q]uit', duration=0)
+        self.show_popup('[N]ew game | [Q]uit', duration=0)
         while True:
             key = self.stdscr.getkey()
             if key == 'q':
@@ -147,7 +155,7 @@ class Curdle:
         curses.use_default_colors()  # is this necessary?
         curses.curs_set(False)  # no cursor
 
-        self.setup_colors()
+        Color.setup()
         self.reset()
 
         # MAIN LOOP
@@ -158,7 +166,7 @@ class Curdle:
                 guess = ''
                 for i, (letter, score) in enumerate(scored_guess):
                     letter = f' {letter.upper()} '
-                    self.stdscr.addstr(5 + (wordle.round - 2) * 2, self.guess_x + i * 4, letter, self.letter_colors[score])
+                    self.stdscr.addstr(5 + (wordle.round - 2) * 2, self.guess_x + i * 4, letter, Color.letter_colors[score])
             else:
                 self.show_popup(response)
 
