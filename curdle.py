@@ -58,15 +58,18 @@ class Curdle:
             for j in range(5):
                 self.stdscr.addstr(y, self.guess_x + j * 4, '   ', self.colors.BL_WHITE)
 
-    def show_popup(self, message):
-        if self.timer:
-            self.timer.cancel()
+    def show_popup(self, message, duration=2.5):
 
         self.popup.clear()
         self.popup.addstr(0, 21 // 2 - len(message) // 2, message)
         self.popup.refresh()
 
-        self.timer = Timer(2, self.clear_popup)
+        if not duration:
+            return
+
+        if self.timer:
+            self.timer.cancel()
+        self.timer = Timer(duration, self.clear_popup)
         self.timer.start()
 
     def clear_popup(self):
@@ -91,8 +94,6 @@ class Curdle:
                 color = self.colors.BL_LGREY if not tracker else self.letter_colors[tracker[letter]]
                 self.stdscr.addstr(y, tracker_x + j * 4, f' {letter.upper()} ', color)
 
-        # self.stdscr.refresh()  # eventually ensure refresh calls are rationalised
-
     def do_round(self, guess):
 
         # loop while in row until a valid guess is entered
@@ -116,8 +117,6 @@ class Curdle:
 
             # if BACKSPACE (KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case)
             elif key in ('KEY_BACKSPACE', '\x7F', '\b') and guess:
-                # print('BACKSPACE')
-                self.stdscr.refresh()
                 guess = guess[:-1]
                 self.stdscr.addstr(5 + (wordle.round - 1) * 2, self.guess_x + (length - 1) * 4, '   ', self.colors.BL_WHITE)
 
@@ -126,17 +125,30 @@ class Curdle:
                 scored_guess, response = wordle.submit(guess)
                 return scored_guess, response, guess
 
+    def menu(self):
+        self.show_popup('[N]ew game/[Q]uit', duration=0)
+        while True:
+            key = self.stdscr.getkey()
+            if key == 'q':
+                raise SystemExit()
+            elif key == 'n':
+                self.reset()
+                break
+
+    def reset(self):
+        wordle.new_game()
+        curses.flushinp()  # prevent input buffer dumping into new game
+        self.draw_title_bar()
+        self.draw_guesses_board()
+        self.clear_popup()
+        self.draw_tracker()
+
     def run(self):
         curses.use_default_colors()  # is this necessary?
         curses.curs_set(False)  # no cursor
 
         self.setup_colors()
-        self.draw_title_bar()
-        self.draw_guesses_board()
-        self.draw_tracker()
-
-        # self.stdscr.refresh()  # was needed for popup (getkey() forces stdscr to top)
-        # self.stdscr.getkey()
+        self.reset()
 
         # MAIN LOOP
         guess = ''
@@ -147,18 +159,17 @@ class Curdle:
                 for i, (letter, score) in enumerate(scored_guess):
                     letter = f' {letter.upper()} '
                     self.stdscr.addstr(5 + (wordle.round - 2) * 2, self.guess_x + i * 4, letter, self.letter_colors[score])
-                self.stdscr.refresh()
             else:
                 self.show_popup(response)
 
             self.draw_tracker(wordle.letter_tracker)
+            self.stdscr.refresh()
 
             # output message if solved or game over, enable menu
             if wordle.state != 'playing':
                 self.show_popup(response)
-                # menu()
-
-        self.stdscr.getch()
+                self.timer.join()  # will block till popup clears
+                self.menu()
 
 
 def main(stdscr):
@@ -168,6 +179,5 @@ def main(stdscr):
 # Game object. Pass in answer if required during dev
 answer = sys.argv[1] if len(sys.argv) > 1 else ''
 wordle = Wordle(answer)
-wordle.new_game()
 
 curses.wrapper(main)
