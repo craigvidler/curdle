@@ -45,6 +45,8 @@ class View:
         # improve magic numbers?
         self.popupwin = curses.newwin(1, 21, 17, self.width // 2 - 10)
         self.titlewin = curses.newwin(1, self.width + 1, 0, 0)  # needs + 1 to fill width?!
+        self.guesseswin = curses.newwin(12, 19, 5, self.width // 2 - 9)
+        self.trackerwin = curses.newwin(5, 39, 19, self.width // 2 - 19)
 
     def draw_title(self):
         # title and menu prompt should be moved from view.py and passed in
@@ -57,6 +59,31 @@ class View:
         win.addstr(0, self.width - len(menu) - 1, '<esc>', Color.WH_DGREY)
         win.addstr(' for menu', Color.LG_DGREY)
         win.refresh()
+
+    def draw_guesses(self):
+
+        for i in range(6):
+            y = i * 2
+            for j in range(5):
+                self.guesseswin.addstr(y, j * 4, '   ', Color.BL_WHITE)
+        self.guesseswin.refresh()
+
+    def draw_tracker(self, tracker=None):
+
+        letters = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm']
+        x = 0
+
+        for i, row in enumerate(letters):
+            y = i * 2
+            if i == 1:
+                x += 2
+            if i == 2:
+                x += 4
+            for j, letter in enumerate(row):
+                color = Color.BL_LGREY if not tracker else Color.letter_colors[tracker[letter]]
+                self.trackerwin.addstr(y, x + j * 4, f' {letter.upper()} ', color)
+
+        self.trackerwin.refresh()
 
     def popup(self, message='', duration=2.5):
         """

@@ -6,40 +6,9 @@ from view import Color, View
 
 
 class Curdle:
-    def __init__(self, stdscr, view, wordle):
+    def __init__(self, view, wordle):
         self.wordle = wordle
         self.view = view
-        self.stdscr = stdscr
-        self.height, self.width = stdscr.getmaxyx()
-
-        # windows
-        self.guesses = curses.newwin(12, 19, 5, self.width // 2 - 9)
-        self.letter_tracker = curses.newwin(5, 39, 19, self.width // 2 - 19)
-
-    def draw_guesses(self):
-
-        for i in range(6):
-            y = i * 2
-            for j in range(5):
-                self.guesses.addstr(y, j * 4, '   ', Color.BL_WHITE)
-        self.guesses.refresh()
-
-    def draw_tracker(self, tracker=None):
-
-        letters = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm']
-        x = 0
-
-        for i, row in enumerate(letters):
-            y = i * 2
-            if i == 1:
-                x += 2
-            if i == 2:
-                x += 4
-            for j, letter in enumerate(row):
-                color = Color.BL_LGREY if not tracker else Color.letter_colors[tracker[letter]]
-                self.letter_tracker.addstr(y, x + j * 4, f' {letter.upper()} ', color)
-
-        self.letter_tracker.refresh()
 
     def do_round(self, guess):
 
@@ -52,7 +21,7 @@ class Curdle:
             # Get input key. try/except here because window resize will crash
             # getkey() without it.
             try:
-                key = self.guesses.getkey()
+                key = self.view.guesseswin.getkey()
             except curses.error:
                 pass
 
@@ -60,12 +29,12 @@ class Curdle:
             if key in ascii_letters and length < 5:
                 guess += key.lower()
                 letter = f' {key.upper()} '
-                self.guesses.addstr((self.wordle.round - 1) * 2, length * 4, letter, Color.BL_WHITE)
+                self.view.guesseswin.addstr((self.wordle.round - 1) * 2, length * 4, letter, Color.BL_WHITE)
 
             # if BACKSPACE (KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case)
             elif key in ('KEY_BACKSPACE', '\x7F', '\b') and guess:
                 guess = guess[:-1]
-                self.guesses.addstr((self.wordle.round - 1) * 2, (length - 1) * 4, '   ', Color.BL_WHITE)
+                self.view.guesseswin.addstr((self.wordle.round - 1) * 2, (length - 1) * 4, '   ', Color.BL_WHITE)
 
             # if ENTER (should work cross-platform)
             elif key in ('\n', '\r'):
@@ -75,7 +44,7 @@ class Curdle:
     def menu(self):
         self.view.popup('[N]ew game | [Q]uit', duration=0)
         while True:
-            key = self.guesses.getkey()
+            key = self.view.guesseswin.getkey()
             if key == 'q':
                 raise SystemExit()
             elif key == 'n':
@@ -86,9 +55,9 @@ class Curdle:
         self.wordle.new_game()
         curses.flushinp()  # prevent input buffer dumping into new game
         self.view.draw_title()
-        self.draw_guesses()
-        self.view.popup()  # no message will clear popup window
-        self.draw_tracker()
+        self.view.draw_guesses()
+        self.view.popup()  # without args will clear popup window
+        self.view.draw_tracker()
 
     def run(self):
         curses.use_default_colors()  # is this necessary?
@@ -104,12 +73,12 @@ class Curdle:
                 guess = ''
                 for i, (letter, score) in enumerate(scored_guess):
                     letter = f' {letter.upper()} '
-                    self.guesses.addstr((self.wordle.round - 2) * 2, i * 4, letter, Color.letter_colors[score])
+                    self.view.guesseswin.addstr((self.wordle.round - 2) * 2, i * 4, letter, Color.letter_colors[score])
             else:
                 self.view.popup(response)
 
-            self.draw_tracker(self.wordle.letter_tracker)
-            self.guesses.refresh()
+            self.view.draw_tracker(self.wordle.letter_tracker)
+            self.view.guesseswin.refresh()
 
             # output message if solved or game over, enable menu
             if self.wordle.state != 'playing':
@@ -123,7 +92,7 @@ def main(stdscr):
     answer = sys.argv[1] if len(sys.argv) > 1 else ''
     wordle = Wordle(answer)  # game object/model
     view = View(curses, stdscr)  # view
-    Curdle(stdscr, view, wordle).run()
+    Curdle(view, wordle).run()
 
 
 curses.wrapper(main)
