@@ -1,126 +1,193 @@
-from collections import Counter
-from itertools import groupby
+import curses
+from string import ascii_letters
 import sys
+from threading import Timer
 from wordle import Wordle
+from enum import IntEnum
 
-# ANSI codes for background colours and text
-LIGHT_GREY = '\u001b[48;5;245m'
-DARK_GREY = '\u001b[48;5;239m'
-YELLOW = '\u001b[48;5;136m'
-GREEN = '\u001b[48;5;28m'
-BG_COLORS = (LIGHT_GREY, DARK_GREY, YELLOW, GREEN)
 
-BLACK_TEXT = '\u001b[38;5;235m'
-WHITE_TEXT = '\u001b[37m'
-BOLD = '\u001b[1m'
-RESET = '\u001b[0m'
+class Color:
+    """
+    Set up curses color pairs in a global Color object with dot syntax. Since
+    colors can't be set up till after curses is loaded, using a simple global
+    enum as we'd like isn't easy. This is close and less faff.
+
+    Example: 'BL_WHITE': (1, 234, 255) ->
+    curses.init_pair(1, 234, 255)
+    Color.BL_WHITE = curses.color_pair(1) | curses.A_BOLD
+    """
+
+    @classmethod
+    def setup(cls):
+        """Create color pairs and class attributes from colors dict."""
+
+        colors = {
+            # name: (color pair id, text color, background color)
+            'BL_WHITE': (1, 234, 255),  # blackish on white
+            'BL_LGREY': (2, 234, 250),  # blackish on light grey
+            'WH_DGREY': (3, 255, 239),  # white on dark grey
+            'WH_YELLOW': (4, 255, 136),  # white on yellow
+            'WH_GREEN': (5, 255, 28),  # white on green
+            'LG_DGREY': (6, 250, 239)  # light grey on dark grey
+        }
+
+        for name, (pair_id, text_color, bg_color) in colors.items():
+            curses.init_pair(pair_id, text_color, bg_color)
+            setattr(cls, name, curses.color_pair(pair_id) | curses.A_BOLD)
+
+        cls.letter_colors = (
+            cls.BL_LGREY, cls.WH_DGREY, cls.WH_YELLOW, cls.WH_GREEN
+        )
+
+
+class Curdle:
+    def __init__(self, stdscr):
+        self.stdscr = stdscr
+        self.height, self.width = stdscr.getmaxyx()
+        self.timer = None
+
+        # windows
+        self.title = curses.newwin(1, self.width + 1, 0, 0)  # needs + 1 to fill width?!
+        self.guesses = curses.newwin(12, 19, 5, self.width // 2 - 9)
+        self.popup = curses.newwin(1, 21, 17, self.width // 2 - 10)
+        self.letter_tracker = curses.newwin(5, 39, 19, self.width // 2 - 19)
+
+    def draw_title(self):
+        title = 'curdle'
+        self.title.addstr(0, 0, ' ' * (self.width), Color.WH_DGREY)
+        self.title.addstr(0, self.width // 2 - len(title) // 2, title, Color.WH_DGREY)
+
+        menu = '<esc> for menu'
+        self.title.addstr(0, self.width - len(menu) - 1, '<esc>', Color.WH_DGREY)
+        self.title.addstr(' for menu', Color.LG_DGREY)
+        self.title.refresh()
+
+    def draw_guesses(self):
+
+        for i in range(6):
+            y = i * 2
+            for j in range(5):
+                self.guesses.addstr(y, j * 4, '   ', Color.BL_WHITE)
+        self.guesses.refresh()
+
+    def show_popup(self, message, duration=2.5):
+
+        self.popup.clear()
+        self.popup.addstr(0, 21 // 2 - len(message) // 2, message)
+        self.popup.refresh()
+
+        if not duration:
+            return
+
+        if self.timer:
+            self.timer.cancel()
+        self.timer = Timer(duration, self.clear_popup)
+        self.timer.start()
+
+    def clear_popup(self):
+        self.popup.clear()
+        self.popup.refresh()
+
+    def draw_tracker(self, tracker=None):
+
+        letters = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm']
+        x = 0
+
+        for i, row in enumerate(letters):
+            y = i * 2
+            if i == 1:
+                x += 2
+            if i == 2:
+                x += 4
+            for j, letter in enumerate(row):
+                color = Color.BL_LGREY if not tracker else Color.letter_colors[tracker[letter]]
+                self.letter_tracker.addstr(y, x + j * 4, f' {letter.upper()} ', color)
+
+        self.letter_tracker.refresh()
+
+    def do_round(self, guess):
+
+        # loop while in row until a valid guess is entered
+        # FIXME: mess-but-works prototype standard, clean up
+
+        while True:
+            length = len(guess)
+
+            # Get input key. try/except here because window resize will crash
+            # getkey() without it.
+            try:
+                key = self.guesses.getkey()
+            except curses.error:
+                pass
+
+            # if valid letter, display it in white box
+            if key in ascii_letters and length < 5:
+                guess += key.lower()
+                letter = f' {key.upper()} '
+                self.guesses.addstr((wordle.round - 1) * 2, length * 4, letter, Color.BL_WHITE)
+
+            # if BACKSPACE (KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case)
+            elif key in ('KEY_BACKSPACE', '\x7F', '\b') and guess:
+                guess = guess[:-1]
+                self.guesses.addstr((wordle.round - 1) * 2, (length - 1) * 4, '   ', Color.BL_WHITE)
+
+            # if ENTER (should work cross-platform)
+            elif key in ('\n', '\r'):
+                scored_guess, response = wordle.submit(guess)
+                return scored_guess, response, guess
+
+    def menu(self):
+        self.show_popup('[N]ew game | [Q]uit', duration=0)
+        while True:
+            key = self.guesses.getkey()
+            if key == 'q':
+                raise SystemExit()
+            elif key == 'n':
+                self.reset()
+                break
+
+    def reset(self):
+        wordle.new_game()
+        curses.flushinp()  # prevent input buffer dumping into new game
+        self.draw_title()
+        self.draw_guesses()
+        self.clear_popup()
+        self.draw_tracker()
+
+    def run(self):
+        curses.use_default_colors()  # is this necessary?
+        curses.curs_set(False)  # no cursor
+        Color.setup()
+        self.reset()
+
+        # MAIN LOOP
+        guess = ''
+        while wordle.state == 'playing':
+            scored_guess, response, guess = self.do_round(guess)
+            if scored_guess:
+                guess = ''
+                for i, (letter, score) in enumerate(scored_guess):
+                    letter = f' {letter.upper()} '
+                    self.guesses.addstr((wordle.round - 2) * 2, i * 4, letter, Color.letter_colors[score])
+            else:
+                self.show_popup(response)
+
+            self.draw_tracker(wordle.letter_tracker)
+            self.guesses.refresh()
+
+            # output message if solved or game over, enable menu
+            if wordle.state != 'playing':
+                self.show_popup(response)
+                self.timer.join()  # will block till popup clears
+                self.menu()
+
+
+def main(stdscr):
+    Curdle(stdscr).run()
+
 
 # Game object. Pass in answer if required during dev
 answer = sys.argv[1] if len(sys.argv) > 1 else ''
 wordle = Wordle(answer)
-wordle.new_game()
 
-
-def colorize(scored_list: list):
-    """expect a list of tuple pairs [(letter, score)…], return color version"""
-    output = ''
-    for letter, score in scored_list:
-        text_color = BLACK_TEXT if not score else WHITE_TEXT
-        bg_color = BG_COLORS[score]
-        output += f'{bg_color}{BOLD}{text_color} {letter.upper()} {RESET}'
-    return output
-
-
-def menu():
-    while True:
-        command = input('[N]ew game, [S]tats, or [Q]uit: ').lower()
-        if command == 'q':
-            raise SystemExit()
-        if command == 's':
-            print(format_stats(wordle.stats))
-        elif command == 'n':
-            wordle.new_game()
-            break
-
-
-def format_stats(stats: list):
-    """Turn wordle.stats into printable output."""
-
-    # Eg `stats` might equal [0, 0, 4, 6, 0, 3], meaning game 1 lost, game 2
-    # lost, game 3 won in round 4, game 4 won in round 6, game 5 lost, game 6
-    # won in round 3. `streaks` would then equal [0, 2, 0, 1]. (Retain zeroes
-    # since current streak might be 0.)
-
-    # total number of games
-    played = len(stats)
-
-    # positive numbers as a %age of all numbers
-    win_percent = round(sum(game > 0 for game in stats) / played * 100)
-
-    # stats grouped into summed streaks and zeros
-    grouped = groupby(stats, lambda x: x > 0)
-    streaks = [sum(1 for _ in group) if key else 0 for key, group in grouped]
-
-    label_style = f'{LIGHT_GREY}{BLACK_TEXT}'
-    value_style = f'{DARK_GREY}{BOLD}{WHITE_TEXT}'
-
-    return (
-        '\n'
-        f'{label_style} Played {value_style} {played} {RESET}   '
-        f'{label_style} Win % {value_style} {win_percent} {RESET}   '
-        f'{label_style} Current streak {value_style} {streaks[-1]} {RESET}   '
-        f'{label_style} Max streak {value_style} {max(streaks)} {RESET}\n\n'
-        f'Guess distribution: \n\n'
-        f'{histo(stats)}'
-    )
-
-
-def histo(stats: list):
-    """Turn wordle.stats into a histogram"""
-
-    MAX_SIZE = 24
-    output = ''
-    totals = Counter(stats)
-
-    # extract biggest value (ie most common score) upfront (other bars sized
-    # proportionally to it). Provide a default in case there's no non-zero
-    # score yet (`max([])` causes error).
-    biggest = max([v for k, v in totals.items() if k > 0], default=1)
-
-    # Ensure all keys 1-6 are present, with a 0 default val
-    for k, v in [(i, totals.get(i, 0)) for i in range(1, 7)]:
-        # latest score highlighted in green
-        bg_color = GREEN if k == stats[-1] else DARK_GREY
-        spaces = ' ' * round(MAX_SIZE * (v / biggest))  # size the bar
-        output += f' {k} {bg_color}{spaces}{WHITE_TEXT} {v} {RESET}\n'
-
-    return output
-
-
-def main():
-    """main loop, manages interface between UI and wordle object"""
-
-    # loop every round
-    while wordle.state == 'playing':
-
-        # input
-        guess = input(f'Guess #{wordle.round}: ').lower()
-
-        # submit input; output error message if any
-        scored_guess, response = wordle.submit(guess)
-        if not scored_guess:
-            print(response, '\n')
-            continue
-
-        # output colored guess and updated tracker if valid guess
-        print(colorize(scored_guess), '  ', end='')
-        print(colorize(wordle.letter_tracker.items()), '\n')
-
-        # output message if solved or game over, enable menu
-        if wordle.state != 'playing':
-            print(response)
-            menu()
-
-
-if __name__ == '__main__':
-    main()
+curses.wrapper(main)
