@@ -40,7 +40,23 @@ class View:
     def __init__(self, curses, stdscr):
         self.timer = None
         self.height, self.width = stdscr.getmaxyx()
+
+        # windows
+        # improve magic numbers?
         self.popupwin = curses.newwin(1, 21, 17, self.width // 2 - 10)
+        self.titlewin = curses.newwin(1, self.width + 1, 0, 0)  # needs + 1 to fill width?!
+
+    def draw_title(self):
+        # title and menu prompt should be moved from view.py and passed in
+        title = 'curdle'
+        win = self.titlewin
+        win.addstr(0, 0, ' ' * (self.width), Color.WH_DGREY)
+        win.addstr(0, self.width // 2 - len(title) // 2, title, Color.WH_DGREY)
+
+        menu = '<esc> for menu'
+        win.addstr(0, self.width - len(menu) - 1, '<esc>', Color.WH_DGREY)
+        win.addstr(' for menu', Color.LG_DGREY)
+        win.refresh()
 
     def popup(self, message='', duration=2.5):
         """

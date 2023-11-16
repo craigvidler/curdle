@@ -13,19 +13,8 @@ class Curdle:
         self.height, self.width = stdscr.getmaxyx()
 
         # windows
-        self.title = curses.newwin(1, self.width + 1, 0, 0)  # needs + 1 to fill width?!
         self.guesses = curses.newwin(12, 19, 5, self.width // 2 - 9)
         self.letter_tracker = curses.newwin(5, 39, 19, self.width // 2 - 19)
-
-    def draw_title(self):
-        title = 'curdle'
-        self.title.addstr(0, 0, ' ' * (self.width), Color.WH_DGREY)
-        self.title.addstr(0, self.width // 2 - len(title) // 2, title, Color.WH_DGREY)
-
-        menu = '<esc> for menu'
-        self.title.addstr(0, self.width - len(menu) - 1, '<esc>', Color.WH_DGREY)
-        self.title.addstr(' for menu', Color.LG_DGREY)
-        self.title.refresh()
 
     def draw_guesses(self):
 
@@ -96,7 +85,7 @@ class Curdle:
     def reset(self):
         self.wordle.new_game()
         curses.flushinp()  # prevent input buffer dumping into new game
-        self.draw_title()
+        self.view.draw_title()
         self.draw_guesses()
         self.view.popup()  # no message will clear popup window
         self.draw_tracker()
@@ -132,8 +121,8 @@ class Curdle:
 def main(stdscr):
     # Pass in answer if required during dev
     answer = sys.argv[1] if len(sys.argv) > 1 else ''
-    wordle = Wordle(answer)  # Game object
-    view = View(curses, stdscr)
+    wordle = Wordle(answer)  # game object/model
+    view = View(curses, stdscr)  # view
     Curdle(stdscr, view, wordle).run()
 
 
