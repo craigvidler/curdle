@@ -123,3 +123,9 @@ class View:
             letter = f' {letter.upper()} '
             self.guesseswin.addstr((game_round - 1) * 2, i * 4, letter, Color.letter_colors[score])
         self.guesseswin.refresh()
+
+    def menu(self):
+        while True:
+            key = self.guesseswin.getkey()
+            if key in 'qn':
+                return key

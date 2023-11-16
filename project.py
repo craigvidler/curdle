@@ -43,13 +43,11 @@ class Curdle:
 
     def menu(self):
         self.view.popup('[N]ew game | [Q]uit', duration=0)
-        while True:
-            key = self.view.guesseswin.getkey()
-            if key == 'q':
-                raise SystemExit()
-            elif key == 'n':
-                self.reset()
-                break
+        option = self.view.menu()
+        if option == 'q':
+            raise SystemExit()
+        elif option == 'n':
+            self.reset()
 
     def reset(self):
         self.wordle.new_game()
@@ -71,7 +69,6 @@ class Curdle:
                 self.view.popup(response)
 
             self.view.draw_tracker(self.wordle.letter_tracker)
-
 
             # output message if solved or game over, enable menu
             if self.wordle.state != 'playing':
