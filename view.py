@@ -38,8 +38,14 @@ class Color:
 class View:
 
     def __init__(self, curses, stdscr):
+        self.curses = curses
+        self.stdscr = stdscr
         self.timer = None
         self.height, self.width = stdscr.getmaxyx()
+
+        curses.use_default_colors()  # is this necessary?
+        curses.curs_set(False)  # no cursor
+        Color.setup(curses)
 
         # windows
         # improve magic numbers?
@@ -104,3 +110,16 @@ class View:
             self.timer.cancel()
         self.timer = Timer(duration, self.popup)
         self.timer.start()
+
+    def reset(self):
+        self.curses.flushinp()  # prevent input buffer dumping into new game
+        self.draw_title()
+        self.draw_guesses()
+        self.popup()  # without args will clear popup window
+        self.draw_tracker()
+
+    def draw_scored_guess(self, scored_guess, game_round):
+        for i, (letter, score) in enumerate(scored_guess):
+            letter = f' {letter.upper()} '
+            self.guesseswin.addstr((game_round - 1) * 2, i * 4, letter, Color.letter_colors[score])
+        self.guesseswin.refresh()
