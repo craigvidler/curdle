@@ -131,7 +131,7 @@ class View:
             self.guesseswin.addstr((turn - 1) * 2, i * 4, letter, Color.letter_colors[score])
         self.guesseswin.refresh()
 
-        # a scored guess means turn over, reset guess buffer for next turn
+        # a scored guess means turn is over, reset guess buffer for next turn
         self.guess = ''
 
     def menu(self):
