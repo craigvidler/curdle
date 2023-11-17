@@ -120,7 +120,6 @@ class View:
             self.timer.join()
 
     def reset(self):
-        self.curses.flushinp()  # prevent input buffer dumping into new game
         self.draw_title()
         self.draw_guesses()
         self.announce()  # without args will clear announce window
@@ -136,6 +135,9 @@ class View:
         self.guess = ''
 
     def menu(self):
+        # discard any input buffered during end game message
+        self.curses.flushinp()
+
         self.announce('[N]ew game | [Q]uit', duration=0)  # FIXME: avoid hardcoding
 
         while True:
@@ -172,4 +174,3 @@ class View:
                 if length == 5:
                     return self.guess
                 self.announce('Not enough letters')  # FIXME: hardcoded message
-
