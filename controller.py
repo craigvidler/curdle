@@ -13,9 +13,9 @@ class Controller:
 
         option = self.view.menu()
 
-        if option == 'q':  # FIXME: enum, and values not keys
+        if option == 'quit':
             raise SystemExit()
-        elif option == 'n':
+        elif option == 'new_game':
             self.reset()
 
     def reset(self):

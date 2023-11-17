@@ -1,3 +1,4 @@
+from enum import Enum
 from string import ascii_letters
 from threading import Timer
 
@@ -34,6 +35,11 @@ class Color:
         cls.letter_colors = (
             cls.BL_LGREY, cls.WH_DGREY, cls.WH_YELLOW, cls.WH_GREEN
         )
+
+
+class MenuOption(str, Enum):
+    NEW_GAME = 'new_game'
+    QUIT = 'quit'
 
 
 class View:
@@ -142,8 +148,10 @@ class View:
 
         while True:
             key = self.guesseswin.getkey()
-            if key in 'qn':
-                return key
+            if key == 'q':
+                return MenuOption.QUIT
+            elif key == 'n':
+                return MenuOption.NEW_GAME
 
     def do_turn(self, turn):
 
