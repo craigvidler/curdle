@@ -1,7 +1,7 @@
 from collections import Counter
 from itertools import groupby
 import sys
-from wordle import Wordle
+from model import Wordle
 
 # ANSI codes for background colours and text
 LIGHT_GREY = '\u001b[48;5;245m'
