@@ -11,7 +11,6 @@ class Controller:
     def menu(self):
         """Display menu and handle choices."""
 
-        self.view.popup('[N]ew game | [Q]uit', duration=0)  # FIXME: avoid hardcoding
         option = self.view.menu()
 
         if option == 'q':  # FIXME: enum, and values not keys
@@ -41,15 +40,13 @@ class Controller:
             scored_guess, response = self.wordle.submit(guess)
 
             if scored_guess:  # if guess found in list
-                self.view.guess = ''  # reset guess buffer for next turn
                 self.view.draw_scored_guess(scored_guess, turn)
             else:
-                self.view.popup(response)  # ie 'not in word list' error
+                self.view.announce(response)  # ie 'not in word list' error
 
             self.view.draw_tracker(self.wordle.tracker)
 
             # output message if solved or game over, enable menu
             if self.wordle.state != 'playing':
-                self.view.popup(response)
-                self.view.timer.join()  # will block till popup clears
+                self.view.announce(response, end_game=True)
                 self.menu()

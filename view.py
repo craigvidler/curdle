@@ -51,7 +51,7 @@ class View:
 
         # windows
         # improve magic numbers?
-        self.popupwin = curses.newwin(1, 21, 17, self.width // 2 - 10)
+        self.announcewin = curses.newwin(1, 21, 17, self.width // 2 - 10)
         self.titlewin = curses.newwin(1, self.width + 1, 0, 0)  # needs + 1 to fill width?!
         self.guesseswin = curses.newwin(12, 19, 5, self.width // 2 - 9)
         self.trackerwin = curses.newwin(5, 39, 19, self.width // 2 - 19)
@@ -93,31 +93,37 @@ class View:
 
         self.trackerwin.refresh()
 
-    def popup(self, message='', duration=2.5):
+    def announce(self, message='', duration=2.5, end_game=False):
         """
-        Show a popup message, either for `duration` or indefinitely if
-        `duration` is 0. If called without arguments, clear the popup
-        window. Only set a timer if both `duration` and `message` given.
+        Show a message, either for `duration` or indefinitely if `duration` is
+        0. If called without arguments, clear the announce window. Only set a
+        timer if both `duration` and `message` given. If game finished, join
+        threads to a) block menu prompt appearing till after current message
+        duration; b) close threads gracefully to avoid eg app restarting
+        after ctrl-C exit during end game message.
         """
 
-        self.popupwin.clear()
+        self.announcewin.clear()
         if message:
-            self.popupwin.addstr(0, 21 // 2 - len(message) // 2, message)
-        self.popupwin.refresh()
+            self.announcewin.addstr(0, 21 // 2 - len(message) // 2, message)
+        self.announcewin.refresh()
 
         if not duration or not message:
             return
 
         if self.timer:
             self.timer.cancel()
-        self.timer = Timer(duration, self.popup)
+        self.timer = Timer(duration, self.announce)
         self.timer.start()
+
+        if end_game:
+            self.timer.join()
 
     def reset(self):
         self.curses.flushinp()  # prevent input buffer dumping into new game
         self.draw_title()
         self.draw_guesses()
-        self.popup()  # without args will clear popup window
+        self.announce()  # without args will clear announce window
         self.draw_tracker()
 
     def draw_scored_guess(self, scored_guess, turn):
@@ -126,7 +132,12 @@ class View:
             self.guesseswin.addstr((turn - 1) * 2, i * 4, letter, Color.letter_colors[score])
         self.guesseswin.refresh()
 
+        # a scored guess means turn over, reset guess buffer for next turn
+        self.guess = ''
+
     def menu(self):
+        self.announce('[N]ew game | [Q]uit', duration=0)  # FIXME: avoid hardcoding
+
         while True:
             key = self.guesseswin.getkey()
             if key in 'qn':
@@ -160,4 +171,5 @@ class View:
             elif key in ('\n', '\r'):
                 if length == 5:
                     return self.guess
-                self.popup('Not enough letters')  # FIXME: hardcoded message
+                self.announce('Not enough letters')  # FIXME: hardcoded message
+
