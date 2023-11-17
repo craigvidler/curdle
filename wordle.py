@@ -57,9 +57,9 @@ class Wordle:
         self.valid_guesses = set(self.load_wordlist(self.guesses_file))
 
         self.state = State.START
-        self.round = 0
-        self.max_rounds = 6
-        self.letter_tracker = {}  # record guessed letters
+        self.turn = 0
+        self.max_turns = 6
+        self.tracker = {}  # record guessed letters
         self.stats = []  # record game results per session
 
     def load_wordlist(self, filename: str):
@@ -71,7 +71,7 @@ class Wordle:
         """Set/reset here anything needed to support multiple games"""
 
         # initialise tracker letters as UNGUESSED (ie 0/light grey)
-        self.letter_tracker = {letter: LetterScore.UNGUESSED for letter in a_to_z}
+        self.tracker = {letter: LetterScore.UNGUESSED for letter in a_to_z}
 
         # answers loaded here not in init, with shuffle/pop not random.choice,
         # to support arbitrarily many games with minimal answer repetition
@@ -83,7 +83,7 @@ class Wordle:
         # just set `self.answer` directly in init without `given_answer`
         # buffer, or renewing answer in subsequent games prevented here.
         self.answer = self.given_answer or self.valid_answers.pop()
-        self.round = 1
+        self.turn = 1
         self.state = State.PLAYING
 
     def score_guess(self, guess: str):
@@ -145,18 +145,18 @@ class Wordle:
 
         # solved
         if all(score is LetterScore.CORRECT for _, score in scored_guess):
-            self.stats.append(self.round)
+            self.stats.append(self.turn)
             self.state = State.SOLVED
-            response = Rating(self.round).name
+            response = Rating(self.turn).name
 
         # game over
-        elif self.round == self.max_rounds:
+        elif self.turn == self.max_turns:
             self.stats.append(0)
             self.state = State.GAMEOVER
             response = self.answer.upper()
 
-        # increment round
-        self.round += 1
+        # increment turn
+        self.turn += 1
 
         return response
 
@@ -167,5 +167,5 @@ class Wordle:
         """
 
         for letter, score in scored_guess:
-            if score > self.letter_tracker[letter]:
-                self.letter_tracker[letter] = score
+            if score > self.tracker[letter]:
+                self.tracker[letter] = score

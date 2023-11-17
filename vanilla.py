@@ -47,8 +47,8 @@ def format_stats(stats: list):
     """Turn wordle.stats into printable output."""
 
     # Eg `stats` might equal [0, 0, 4, 6, 0, 3], meaning game 1 lost, game 2
-    # lost, game 3 won in round 4, game 4 won in round 6, game 5 lost, game 6
-    # won in round 3. `streaks` would then equal [0, 2, 0, 1]. (Retain zeroes
+    # lost, game 3 won in turn 4, game 4 won in turn 6, game 5 lost, game 6
+    # won in turn 3. `streaks` would then equal [0, 2, 0, 1]. (Retain zeroes
     # since current streak might be 0.)
 
     # total number of games
@@ -100,11 +100,11 @@ def histo(stats: list):
 def main():
     """main loop, manages interface between UI and wordle object"""
 
-    # loop every round
+    # loop every turn
     while wordle.state == 'playing':
 
         # input
-        guess = input(f'Guess #{wordle.round}: ').lower()
+        guess = input(f'Guess #{wordle.turn }: ').lower()
 
         # submit input; output error message if any
         scored_guess, response = wordle.submit(guess)
@@ -114,7 +114,7 @@ def main():
 
         # output colored guess and updated tracker if valid guess
         print(colorize(scored_guess), '  ', end='')
-        print(colorize(wordle.letter_tracker.items()), '\n')
+        print(colorize(wordle.tracker.items()), '\n')
 
         # output message if solved or game over, enable menu
         if wordle.state != 'playing':

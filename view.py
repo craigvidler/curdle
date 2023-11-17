@@ -120,10 +120,10 @@ class View:
         self.popup()  # without args will clear popup window
         self.draw_tracker()
 
-    def draw_scored_guess(self, scored_guess, game_round):
+    def draw_scored_guess(self, scored_guess, turn):
         for i, (letter, score) in enumerate(scored_guess):
             letter = f' {letter.upper()} '
-            self.guesseswin.addstr((game_round - 1) * 2, i * 4, letter, Color.letter_colors[score])
+            self.guesseswin.addstr((turn - 1) * 2, i * 4, letter, Color.letter_colors[score])
         self.guesseswin.refresh()
 
     def menu(self):
@@ -132,7 +132,7 @@ class View:
             if key in 'qn':
                 return key
 
-    def do_round(self, game_round):
+    def do_turn(self, turn):
 
         # loop while in row until a valid guess is entered
         while True:
@@ -149,12 +149,12 @@ class View:
             if key in ascii_letters and length < 5:
                 self.guess += key.lower()
                 letter = f' {key.upper()} '
-                self.guesseswin.addstr((game_round - 1) * 2, length * 4, letter, Color.BL_WHITE)
+                self.guesseswin.addstr((turn - 1) * 2, length * 4, letter, Color.BL_WHITE)
 
             # if BACKSPACE (KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case)
             elif key in ('KEY_BACKSPACE', '\x7F', '\b') and self.guess:
                 self.guess = self.guess[:-1]
-                self.guesseswin.addstr((game_round - 1) * 2, (length - 1) * 4, '   ', Color.BL_WHITE)
+                self.guesseswin.addstr((turn - 1) * 2, (length - 1) * 4, '   ', Color.BL_WHITE)
 
             # if ENTER (should work cross-platform)
             elif key in ('\n', '\r'):
