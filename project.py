@@ -1,45 +1,13 @@
 import curses
-from string import ascii_letters
 import sys
 from wordle import Wordle
-from view import Color, View
+from view import View
 
 
 class Curdle:
     def __init__(self, view, wordle):
         self.wordle = wordle
         self.view = view
-
-    def do_round(self, guess):
-
-        # loop while in row until a valid guess is entered
-        # FIXME: mess-but-works prototype standard, clean up
-
-        while True:
-            length = len(guess)
-
-            # Get input key. try/except here because window resize will crash
-            # getkey() without it.
-            try:
-                key = self.view.guesseswin.getkey()
-            except curses.error:
-                pass
-
-            # if valid letter, display it in white box
-            if key in ascii_letters and length < 5:
-                guess += key.lower()
-                letter = f' {key.upper()} '
-                self.view.guesseswin.addstr((self.wordle.round - 1) * 2, length * 4, letter, Color.BL_WHITE)
-
-            # if BACKSPACE (KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case)
-            elif key in ('KEY_BACKSPACE', '\x7F', '\b') and guess:
-                guess = guess[:-1]
-                self.view.guesseswin.addstr((self.wordle.round - 1) * 2, (length - 1) * 4, '   ', Color.BL_WHITE)
-
-            # if ENTER (should work cross-platform)
-            elif key in ('\n', '\r'):
-                scored_guess, response = self.wordle.submit(guess)
-                return scored_guess, response, guess
 
     def menu(self):
         self.view.popup('[N]ew game | [Q]uit', duration=0)
@@ -57,16 +25,19 @@ class Curdle:
         self.reset()
 
         # MAIN LOOP
-        guess = ''
         while self.wordle.state == 'playing':
             # get the round number before it's incremented by a valid guess
             game_round = self.wordle.round
-            scored_guess, response, guess = self.do_round(guess)
-            if scored_guess:
-                guess = ''
+
+            # `guess` will be a completed row (5 letters)
+            guess = self.view.do_round(game_round)
+            scored_guess, response = self.wordle.submit(guess)
+
+            if scored_guess:  # if guess found in list
+                self.view.guess = ''  # reset guess buffer for next round
                 self.view.draw_scored_guess(scored_guess, game_round)
             else:
-                self.view.popup(response)
+                self.view.popup(response)  # 'not in word list' error
 
             self.view.draw_tracker(self.wordle.letter_tracker)
 

@@ -1,3 +1,4 @@
+from string import ascii_letters
 from threading import Timer
 
 
@@ -42,6 +43,7 @@ class View:
         self.stdscr = stdscr
         self.timer = None
         self.height, self.width = stdscr.getmaxyx()
+        self.guess = ''  # buffer holding guess-in-progress
 
         curses.use_default_colors()  # is this necessary?
         curses.curs_set(False)  # no cursor
@@ -55,7 +57,7 @@ class View:
         self.trackerwin = curses.newwin(5, 39, 19, self.width // 2 - 19)
 
     def draw_title(self):
-        # title and menu prompt should be moved from view.py and passed in
+        # FIXME: title and menu prompt should be moved from view.py and passed in
         title = 'curdle'
         win = self.titlewin
         win.addstr(0, 0, ' ' * (self.width), Color.WH_DGREY)
@@ -129,3 +131,33 @@ class View:
             key = self.guesseswin.getkey()
             if key in 'qn':
                 return key
+
+    def do_round(self, game_round):
+
+        # loop while in row until a valid guess is entered
+        while True:
+            length = len(self.guess)
+
+            # Get input key. try/except here because window resize will crash
+            # getkey() without it.
+            try:
+                key = self.guesseswin.getkey()
+            except self.curses.error:
+                pass
+
+            # if valid letter, display it in white box
+            if key in ascii_letters and length < 5:
+                self.guess += key.lower()
+                letter = f' {key.upper()} '
+                self.guesseswin.addstr((game_round - 1) * 2, length * 4, letter, Color.BL_WHITE)
+
+            # if BACKSPACE (KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case)
+            elif key in ('KEY_BACKSPACE', '\x7F', '\b') and self.guess:
+                self.guess = self.guess[:-1]
+                self.guesseswin.addstr((game_round - 1) * 2, (length - 1) * 4, '   ', Color.BL_WHITE)
+
+            # if ENTER (should work cross-platform)
+            elif key in ('\n', '\r'):
+                if length == 5:
+                    return self.guess
+                self.popup('Not enough letters')  # FIXME: hardcoded message
