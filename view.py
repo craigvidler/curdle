@@ -1,3 +1,4 @@
+from curses import panel
 from enum import Enum
 from string import ascii_letters
 from threading import Timer
@@ -45,22 +46,32 @@ class MenuOption(str, Enum):
 class View:
 
     def __init__(self, curses, stdscr):
+
         self.curses = curses
         self.stdscr = stdscr
         self.timer = None
         self.height, self.width = stdscr.getmaxyx()
         self.guess = ''  # buffer holding guess-in-progress
 
-        curses.use_default_colors()  # is this necessary?
-        curses.curs_set(False)  # no cursor
-        Color.setup(curses)
+        # windows and panels (improve magic numbers? shorten lines?)
+        middle_x = self.width // 2
+        self.titlewin, self.titlepanel = self.create_panels(1, self.width + 1, 0, 0)  # needs + 1 to fill width?!
+        self.guesseswin, self.guessespanel = self.create_panels(12, 19, 5, middle_x - 9)
+        self.announcewin, self.announcepanel = self.create_panels(1, 21, 17, middle_x - 10)
+        self.trackerwin, self.trackerpanel = self.create_panels(5, 39, 19, middle_x - 19)
+        self.menuwin, self.menupanel = self.create_panels(13, 28, 8, middle_x - 14)
 
-        # windows
-        # improve magic numbers?
-        self.announcewin = curses.newwin(1, 21, 17, self.width // 2 - 10)
-        self.titlewin = curses.newwin(1, self.width + 1, 0, 0)  # needs + 1 to fill width?!
-        self.guesseswin = curses.newwin(12, 19, 5, self.width // 2 - 9)
-        self.trackerwin = curses.newwin(5, 39, 19, self.width // 2 - 19)
+        self.setup_curses()
+
+    def setup_curses(self):
+        self.curses.use_default_colors()  # is this necessary?
+        self.curses.curs_set(False)  # no cursor
+        Color.setup(self.curses)
+
+    def create_panels(self, h, w, y, x):
+        new_window = self.curses.newwin(h, w, y, x)
+        new_panel = panel.new_panel(new_window)
+        return new_window, new_panel
 
     def draw_title(self):
         # FIXME: title and menu prompt should be moved from view.py and passed in
@@ -69,8 +80,9 @@ class View:
         win.addstr(0, 0, ' ' * (self.width), Color.WH_DGREY)
         win.addstr(0, self.width // 2 - len(title) // 2, title, Color.WH_DGREY)
 
-        menu = '<esc> for menu'
-        win.addstr(0, self.width - len(menu) - 1, '<esc>', Color.WH_DGREY)
+        menu = 'press 0 for menu'  # FIXME: hack
+        win.addstr(0, self.width - len(menu) - 1, 'press ', Color.LG_DGREY)
+        win.addstr('0', Color.WH_DGREY)
         win.addstr(' for menu', Color.LG_DGREY)
         win.refresh()
 
@@ -103,6 +115,10 @@ class View:
 
         self.trackerwin.refresh()
 
+    def draw_menu(self):
+        self.menuwin.border()
+        self.hide_menu()
+
     def announce(self, message='', duration=2.5, end_game=False):
         """
         Show a message, either for `duration` or indefinitely if `duration` is
@@ -134,6 +150,7 @@ class View:
         self.draw_guesses()
         self.announce()  # without args will clear announce window
         self.draw_tracker()
+        self.draw_menu()
 
     def draw_scored_guess(self, scored_guess, turn):
         for i, (letter, score) in enumerate(scored_guess):
@@ -147,15 +164,31 @@ class View:
     def menu(self):
         # discard any input buffered during end game message
         self.curses.flushinp()
-
-        self.announce('[N]ew game | [Q]uit', duration=0)  # FIXME: avoid hardcoding
+        self.show_menu()
 
         while True:
+            # temporary: key-based menu will be replaced soon
             key = self.guesseswin.getkey()
             if key == 'q':
                 return MenuOption.QUIT
             elif key == 'n':
+                self.hide_menu()
                 return MenuOption.NEW_GAME
+            elif key == 'x':
+                self.hide_menu()
+                break
+
+    def show_menu(self):
+        self.menupanel.show()
+        panel.update_panels()
+        self.stdscr.refresh()
+
+    def hide_menu(self):
+        # .hide() throws error if panel is not visible
+        if not self.menupanel.hidden():
+            self.menupanel.hide()
+            panel.update_panels()
+            self.stdscr.refresh()
 
     def do_turn(self, turn):
 
@@ -186,3 +219,7 @@ class View:
                 if length == 5:
                     return self.guess
                 self.announce('Not enough letters')  # FIXME: hardcoded message
+
+            # display menu
+            elif key == '0':
+                self.menu()
