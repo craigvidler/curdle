@@ -76,6 +76,10 @@ class View:
 
     def draw_guesses(self):
 
+        # stdscr doesn't need this but windows taking input do, otherwise
+        # eg arrow keys will be read as ABCD (ie valid input letters).
+        self.guesseswin.keypad(True)
+
         for i in range(6):
             y = i * 2
             for j in range(5):
