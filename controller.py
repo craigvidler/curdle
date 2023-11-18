@@ -42,11 +42,11 @@ class Controller:
             if scored_guess:  # if guess found in list
                 self.view.draw_scored_guess(scored_guess, turn)
             else:
-                self.view.announce(response)  # ie 'not in word list' error
+                self.view.alert(response)  # ie 'not in word list' error
 
             self.view.draw_tracker(self.wordle.tracker)
 
             # output message if solved or game over, enable menu
             if self.wordle.state != 'playing':
-                self.view.announce(response, end_game=True)
+                self.view.alert(response, end_game=True)
                 self.menu()

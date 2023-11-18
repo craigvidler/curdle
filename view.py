@@ -57,7 +57,7 @@ class View:
         middle_x = self.width // 2
         self.titlewin, self.titlepanel = self.create_panels(1, self.width + 1, 0, 0)  # needs + 1 to fill width?!
         self.guesseswin, self.guessespanel = self.create_panels(12, 19, 5, middle_x - 9)
-        self.announcewin, self.announcepanel = self.create_panels(1, 21, 17, middle_x - 10)
+        self.alertwin, self.alertpanel = self.create_panels(1, 21, 17, middle_x - 10)
         self.trackerwin, self.trackerpanel = self.create_panels(5, 39, 19, middle_x - 19)
         self.menuwin, self.menupanel = self.create_panels(13, 28, 8, middle_x - 14)
 
@@ -119,27 +119,27 @@ class View:
         self.menuwin.border()
         self.hide_menu()
 
-    def announce(self, message='', duration=2.5, end_game=False):
+    def alert(self, message='', duration=2.5, end_game=False):
         """
         Show a message, either for `duration` or indefinitely if `duration` is
-        0. If called without arguments, clear the announce window. Only set a
+        0. If called without arguments, clear the alert window. Only set a
         timer if both `duration` and `message` given. If game finished, join
         threads to a) block menu prompt appearing till after current message
         duration; b) close threads gracefully to avoid eg app restarting
         after ctrl-C exit during end game message.
         """
 
-        self.announcewin.clear()
+        self.alertwin.clear()
         if message:
-            self.announcewin.addstr(0, 21 // 2 - len(message) // 2, message)
-        self.announcewin.refresh()
+            self.alertwin.addstr(0, 21 // 2 - len(message) // 2, message)
+        self.alertwin.refresh()
 
         if not duration or not message:
             return
 
         if self.timer:
             self.timer.cancel()
-        self.timer = Timer(duration, self.announce)
+        self.timer = Timer(duration, self.alert)
         self.timer.start()
 
         if end_game:
@@ -148,7 +148,7 @@ class View:
     def reset(self):
         self.draw_title()
         self.draw_guesses()
-        self.announce()  # without args will clear announce window
+        self.alert()  # without args will clear alert window
         self.draw_tracker()
         self.draw_menu()
 
@@ -218,7 +218,7 @@ class View:
             elif key in ('\n', '\r'):
                 if length == 5:
                     return self.guess
-                self.announce('Not enough letters')  # FIXME: hardcoded message
+                self.alert('Not enough letters')  # FIXME: hardcoded message
 
             # display menu
             elif key == '0':
