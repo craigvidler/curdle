@@ -177,7 +177,7 @@ class View:
         self.guess = ''
 
     def get_key(self, window):
-        # Get input key. try/except or window resize will crash getkey().
+        # Get input key. try/except or terminal window resize will crash getkey().
         try:
             return window.getkey()
         except self.curses.error:
