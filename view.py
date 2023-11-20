@@ -1,5 +1,5 @@
 from curses import panel
-from enum import Enum
+from enum import IntEnum, auto
 from string import ascii_letters
 from threading import Timer
 
@@ -26,21 +26,32 @@ class Color:
             'WH_DGREY': (3, 255, 239),  # white on dark grey
             'WH_YELLOW': (4, 255, 136),  # white on yellow
             'WH_GREEN': (5, 255, 28),  # white on green
-            'LG_DGREY': (6, 250, 239)  # light grey on dark grey
+            'LG_DGREY': (6, 250, 239),  # light grey on dark grey
+            'WH_DRED': (7, 255, 88),  # white on dark red
+            'WH_DRED_NORMAL': (8, 255, 124)  # white on red
         }
 
         for name, (pair_id, text_color, bg_color) in colors.items():
             curses.init_pair(pair_id, text_color, bg_color)
-            setattr(cls, name, curses.color_pair(pair_id) | curses.A_BOLD)
+            # no better way?
+            if name == 'WH_DRED_NORMAL':
+                setattr(cls, name, curses.color_pair(pair_id))
+            else:
+                setattr(cls, name, curses.color_pair(pair_id) | curses.A_BOLD)
 
         cls.letter_colors = (
             cls.BL_LGREY, cls.WH_DGREY, cls.WH_YELLOW, cls.WH_GREEN
         )
 
 
-class MenuOption(str, Enum):
-    NEW_GAME = 'new_game'
-    QUIT = 'quit'
+class MenuOption(IntEnum):
+    """Menu options. Provide int or string based on name as needed."""
+    NEW_GAME = auto()
+    STATS = auto()
+    EXIT = auto()
+
+    def __str__(self):
+        return self.name.replace('_', ' ')
 
 
 class View:
@@ -59,7 +70,9 @@ class View:
         self.guesseswin, self.guessespanel = self.create_panels(12, 19, 5, middle_x - 9)
         self.alertwin, self.alertpanel = self.create_panels(1, 21, 17, middle_x - 10)
         self.trackerwin, self.trackerpanel = self.create_panels(5, 39, 19, middle_x - 19)
-        self.menuwin, self.menupanel = self.create_panels(13, 28, 8, middle_x - 14)
+        self.menuwin, self.menupanel = self.create_panels(7, 17, 6, middle_x - 8)
+
+        self.menu_selected = MenuOption(1)  # default to first item
 
         self.setup_curses()
 
@@ -80,10 +93,9 @@ class View:
         win.addstr(0, 0, ' ' * (self.width), Color.WH_DGREY)
         win.addstr(0, self.width // 2 - len(title) // 2, title, Color.WH_DGREY)
 
-        menu = 'press 0 for menu'  # FIXME: hack
-        win.addstr(0, self.width - len(menu) - 1, 'press ', Color.LG_DGREY)
-        win.addstr('0', Color.WH_DGREY)
-        win.addstr(' for menu', Color.LG_DGREY)
+        prompt = ' menu on/off: press  0 '
+        win.addstr(0, self.width - len(prompt), prompt[:-3], Color.WH_DRED_NORMAL)
+        win.addstr(prompt[-3:], Color.WH_DRED)
         win.refresh()
 
     def draw_guesses(self):
@@ -115,9 +127,10 @@ class View:
 
         self.trackerwin.refresh()
 
-    def draw_menu(self):
+    def setup_menu(self):
+        self.menuwin.keypad(True)  # to handle arrow key input properly
         self.menuwin.border()
-        self.hide_menu()
+        self.hide_menu()  # hidden by default
 
     def alert(self, message='', duration=2.5, end_game=False):
         """
@@ -150,7 +163,9 @@ class View:
         self.draw_guesses()
         self.alert()  # without args will clear alert window
         self.draw_tracker()
-        self.draw_menu()
+        self.setup_menu()
+        self.guess = ''
+        self.menu_selected = MenuOption(1)
 
     def draw_scored_guess(self, scored_guess, turn):
         for i, (letter, score) in enumerate(scored_guess):
@@ -161,30 +176,67 @@ class View:
         # a scored guess means turn is over, reset guess buffer for next turn
         self.guess = ''
 
-    def menu(self):
+    def get_key(self, window):
+        # Get input key. try/except or window resize will crash getkey().
+        try:
+            return window.getkey()
+        except self.curses.error:
+            pass
+
+    def menu(self, end_game=False):
         # discard any input buffered during end game message
         self.curses.flushinp()
         self.show_menu()
 
         while True:
-            # temporary: key-based menu will be replaced soon
-            key = self.guesseswin.getkey()
-            if key == 'q':
-                return MenuOption.QUIT
-            elif key == 'n':
-                self.hide_menu()
-                return MenuOption.NEW_GAME
-            elif key == 'x':
+
+            # get user input keypress
+            key = self.get_key(self.menuwin)
+
+            # change selected option with up/down, limited to options available
+            if key == 'KEY_UP' and self.menu_selected > MenuOption(1):
+                self.menu_selected = MenuOption(self.menu_selected - 1)
+            elif key == 'KEY_DOWN' and self.menu_selected < len(MenuOption):
+                self.menu_selected = MenuOption(self.menu_selected + 1)
+
+            # Selected option entered, return it to controller.
+            elif key in ('\n', '\r'):
+                #  FIXME: temporary safeguard while STATS unavailable
+                if self.menu_selected != MenuOption.STATS:
+                    return self.menu_selected
+
+            # close menu, but disabled for end game menu
+            elif key == '0' and not end_game:
                 self.hide_menu()
                 break
 
+            self.show_menu()
+
     def show_menu(self):
-        self.menupanel.show()
-        panel.update_panels()
-        self.stdscr.refresh()
+        def center_print(win, text, y, attrs):
+            _, width = win.getmaxyx()
+            x = width // 2 - len(text) // 2
+            win.addstr(y, x, text, attrs)
+
+        margin_top = 1
+
+        for option in MenuOption:
+            if option == self.menu_selected:
+                attrs = self.curses.A_REVERSE
+            else:
+                attrs = self.curses.A_NORMAL
+
+            center_print(self.menuwin, f' {option} ', margin_top + option, attrs)
+
+        self.menuwin.refresh()
+
+        if self.menupanel.hidden():
+            self.menupanel.show()
+            panel.update_panels()
+            self.stdscr.refresh()
 
     def hide_menu(self):
-        # .hide() throws error if panel is not visible
+        # .hide() throws error if panel is already hidden
         if not self.menupanel.hidden():
             self.menupanel.hide()
             panel.update_panels()
@@ -196,12 +248,8 @@ class View:
         while True:
             length = len(self.guess)
 
-            # Get input key. try/except here because window resize will crash
-            # getkey() without it.
-            try:
-                key = self.guesseswin.getkey()
-            except self.curses.error:
-                pass
+            # get user input keypress
+            key = self.get_key(self.guesseswin)
 
             # if valid letter, display it in white box
             if key in ascii_letters and length < 5:
@@ -220,6 +268,9 @@ class View:
                     return self.guess
                 self.alert('Not enough letters')  # FIXME: hardcoded message
 
-            # display menu
+            # Display menu. Return if there's something to give controller,
+            # otherwise (ie '0' pressed to close menu), stay in loop.
             elif key == '0':
-                self.menu()
+                selected = self.menu()
+                if selected:
+                    return selected
