@@ -1,8 +1,8 @@
-from controller import Controller
+from curdle.controller import Controller
+from curdle.model import Wordle
+from curdle.view import View
 import curses
 import sys
-from view import View
-from model import Wordle
 
 
 def main(stdscr):

@@ -1,5 +1,5 @@
-from model import Wordle  # Just for typehint below. Good practice?
-from view import MenuOption  # Good practice?
+from .model import Wordle  # Just for typehint below. Good practice?
+from .view import MenuOption  # Good practice?
 
 
 class Controller:
