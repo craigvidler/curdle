@@ -27,8 +27,8 @@ class Color:
             'WH_YELLOW': (4, 255, 136),  # white on yellow
             'WH_GREEN': (5, 255, 28),  # white on green
             'LG_DGREY': (6, 250, 239),  # light grey on dark grey
-            'WH_DRED': (7, 255, 88),  # white on dark red
-            'WH_DRED_NORMAL': (8, 255, 124)  # white on red
+            'WH_DRED_NORMAL': (8, 255, 88),  # white on dark red (not bold)
+            'WH_RED': (7, 255, 124)  # white on red
         }
 
         for name, (pair_id, text_color, bg_color) in colors.items():
@@ -95,7 +95,7 @@ class View:
 
         prompt = ' menu on/off: press  0 '
         win.addstr(0, self.width - len(prompt), prompt[:-3], Color.WH_DRED_NORMAL)
-        win.addstr(prompt[-3:], Color.WH_DRED)
+        win.addstr(prompt[-3:], Color.WH_RED)
         win.refresh()
 
     def draw_guesses(self):
