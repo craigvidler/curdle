@@ -3,30 +3,32 @@ Models the core game logic of Wordle. UI is left to a front end (the client
 code using this class). See README.md for details.
 """
 
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 from random import shuffle
 from string import ascii_lowercase as a_to_z
 
 
-# Using an IntEnum so we can do > comparison, and to access the int value
-# outside the module without needing to import LetterScore or use .value.
 class LetterScore(IntEnum):
+    # Using an IntEnum so we can do > comparison, and to access the int value
+    # outside the module without importing LetterScore or using .value.
     UNGUESSED = 0
     ABSENT = 1
     PRESENT = 2
     CORRECT = 3
 
-# StrEnum preferable here for ease of use (no imports or .value needed outside
-# the module), but like this avoids requiring Py3.11.
+
 class State(str, Enum):
+    # StrEnum preferable here for ease of use (no imports or .value needed
+    # outside the module), but like this avoids requiring Py3.11.
     START = 'start'
     PLAYING = 'playing'
     GAMEOVER = 'game over'
     SOLVED = 'solved'
 
-# As above. Also, __str__ because Errors will be output not just checked like
-# States, and it avoids needing `.value` below.
+
 class Error(str, Enum):
+    # As above. Also, __str__ because Errors will be output not just checked
+    # like States, and it avoids needing `.value` below.
     TOOSHORT = 'Not enough letters'
     INVALID = 'Not in word list'
 
@@ -35,12 +37,37 @@ class Error(str, Enum):
 
 
 class Rating(Enum):
+    # This probably shouldn't be an enum, could move elsewhere
     Genius = 1
     Magnificent = 2
     Impressive = 3
     Splendid = 4
     Great = 5
     Phew = 6
+
+
+class MenuOption(IntEnum):
+    """Menu options. Provide int or string based on name as needed."""
+    NEW_GAME = auto()
+    STATS = auto()
+    EXIT = auto()
+
+    def __str__(self):
+        return self.name.replace('_', ' ')
+
+
+class Menu:
+    def __init__(self):
+        self.options = MenuOption
+        self.selected = self.options(1)  # default to first item
+
+    def up(self):
+        if self.selected > MenuOption(1):
+            self.selected = MenuOption(self.selected - 1)
+
+    def down(self):
+        if self.selected < len(MenuOption):
+            self.selected = MenuOption(self.selected + 1)
 
 
 class Wordle:
