@@ -1,11 +1,11 @@
 """
-Models the core game logic of Wordle. UI is left to a front end (the client
-code using this class). See README.md for details.
+Models the core game logic of Wordle. As part of an MVC app, UI is left to a
+front end (the client code using this class). See README.md for details.
 """
 
 from enum import Enum, IntEnum, auto
 from random import shuffle
-from string import ascii_lowercase as a_to_z
+from string import ascii_letters, ascii_lowercase as a_to_z
 
 
 class LetterScore(IntEnum):
@@ -95,6 +95,15 @@ class Wordle:
         """Return the current turn number, must not be > 6."""
         return min(len(self.previous_guesses) + 1, 6)
 
+    def add_letter(self, letter):
+        """Add a letter to current guess if valid to do so."""
+        if letter in ascii_letters and len(self.current_guess) < 5:
+            self.current_guess += letter.lower()
+
+    def delete_letter(self, letter):
+        """Delete a letter from current guess."""
+        self.current_guess = self.current_guess[:-1]
+
     def load_wordlist(self, filename: str):
         """Load a wordlist and return it in a list."""
         with open(filename) as f:
@@ -145,35 +154,36 @@ class Wordle:
 
         return scored_guess
 
-    def submit(self, guess: str):
+    def submit(self, guess=''):
         """
-        Take in a guess, validate it, score it in comparison to the answer,
-        return a scored guess as a list of tuples, plus a response.
+        Validate current guess, score it, update game, return a scored guess
+        as a list of tuples or None, plus a response or None.
         """
-        response = ''
-        guess = guess.lower()
 
-        # validate guess
-        if len(guess) < 5:
-            return None, Error.TOOSHORT
-        elif guess not in self.valid_guesses:
-            return None, Error.INVALID
+        # The default expectation is letter-by-letter submission via
+        # `self.current_guess`(eg from a UI like curses), but this line and
+        # default parameter will also support an override for UIs like the
+        # command line which are limited to submitting the whole guess only.
+        guess = guess or self.current_guess
 
-        # score it
-        scored_guess = self.score_guess(guess)
+        # validate guess: if invalid, response is Error, scored_guess is empty
+        if error := self.validate(guess):
+            scored_guess, response = None, error
 
-        # update game, tracker
-        response = self.update_game(scored_guess)
-        self.update_tracker(scored_guess)
+        # else score it, update game: response returns empty, Rating or answer
+        else:
+            scored_guess = self.score_guess(guess)
+            response = self.update_game(scored_guess)
 
         return scored_guess, response
 
     def update_game(self, scored_guess: list):
         """
-        If solved or game over, change state. Record game score in stats.
-        Return appropriate response.
+        Update game elements at end of turn. If game solved or over, change
+        state. Record game score in stats. Return appropriate response.
         """
 
+        # will remain empty for a valid guess in a non-winning, non-losing turn
         response = ''
 
         # if solved
@@ -188,7 +198,9 @@ class Wordle:
             self.state = State.GAMEOVER
             response = self.answer.upper()
 
-        # save the scored guess/completed turn, reset current guess buffer
+        # in all cases: update tracker, save the scored guess, reset current
+        # guess buffer
+        self.update_tracker(scored_guess)
         self.previous_guesses.append(scored_guess)
         self.current_guess = ''
 
@@ -199,7 +211,13 @@ class Wordle:
         Update tracker with each letter from `scored_guess`.
         Only change a letter's score if it's to a higher one.
         """
-
         for letter, score in scored_guess:
             if score > self.tracker[letter]:
                 self.tracker[letter] = score
+
+    def validate(self, guess):
+        """Validate guess: return None if valid, Error if invalid."""
+        if len(guess) < 5:
+            return Error.TOOSHORT
+        elif guess not in self.valid_guesses:
+            return Error.INVALID
