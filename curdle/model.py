@@ -92,7 +92,7 @@ class Wordle:
 
     @property
     def turn(self):
-        """Return the current turn number, mustn't be > 6."""
+        """Return the current turn number, must not be > 6."""
         return min(len(self.previous_guesses) + 1, 6)
 
     def load_wordlist(self, filename: str):
@@ -188,8 +188,9 @@ class Wordle:
             self.state = State.GAMEOVER
             response = self.answer.upper()
 
-        # save the scored guess/completed turn (incrementing turn count)
+        # save the scored guess/completed turn, reset current guess buffer
         self.previous_guesses.append(scored_guess)
+        self.current_guess = ''
 
         return response
 
