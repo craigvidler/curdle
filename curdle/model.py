@@ -82,12 +82,18 @@ class Wordle:
 
         self.guesses_file = 'data/valid_guesses.txt'
         self.valid_guesses = set(self.load_wordlist(self.guesses_file))
+        self.previous_guesses = []  # record of submitted, scored guesses
+        self.current_guess = ''  # buffer for guess-in-progress before submit
 
         self.state = State.START
-        self.turn = 0
         self.max_turns = 6
         self.tracker = {}  # record guessed letters
         self.stats = []  # record game results per session
+
+    @property
+    def turn(self):
+        """Return the current turn number, mustn't be > 6."""
+        return min(len(self.previous_guesses) + 1, 6)
 
     def load_wordlist(self, filename: str):
         """Load a wordlist and return it in a list."""
@@ -110,8 +116,8 @@ class Wordle:
         # just set `self.answer` directly in init without `given_answer`
         # buffer, or renewing answer in subsequent games prevented here.
         self.answer = self.given_answer or self.valid_answers.pop()
-        self.turn = 1
         self.state = State.PLAYING
+        self.previous_guesses = []
 
     def score_guess(self, guess: str):
         """
@@ -170,20 +176,20 @@ class Wordle:
 
         response = ''
 
-        # solved
+        # if solved
         if all(score is LetterScore.CORRECT for _, score in scored_guess):
             self.stats.append(self.turn)
             self.state = State.SOLVED
             response = Rating(self.turn).name
 
-        # game over
+        # if game over
         elif self.turn == self.max_turns:
             self.stats.append(0)
             self.state = State.GAMEOVER
             response = self.answer.upper()
 
-        # increment turn
-        self.turn += 1
+        # save the scored guess/completed turn (incrementing turn count)
+        self.previous_guesses.append(scored_guess)
 
         return response
 
