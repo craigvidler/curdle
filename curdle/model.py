@@ -3,7 +3,9 @@ Models the core game logic of Wordle. As part of an MVC app, UI is left to a
 front end (the client code using this class). See README.md for details.
 """
 
+from collections import Counter
 from enum import Enum, IntEnum, auto
+from itertools import groupby
 from random import shuffle
 from string import ascii_letters, ascii_lowercase as a_to_z
 
@@ -88,7 +90,32 @@ class Wordle:
         self.state = State.START
         self.max_turns = 6
         self.tracker = {}  # record guessed letters
-        self.stats = []  # record game results per session
+        self.scores = []  # record game results per session
+
+    @property
+    def stats(self):
+        """Turn Wordle.scores into a stats dictionary."""
+
+        # total number of games
+        played = len(self.scores)
+
+        # positive numbers as a %age of all numbers
+        win_percent = round(sum(game > 0 for game in self.scores) / played * 100)
+
+        # scores grouped into summed streaks and zeros
+        grouped = groupby(self.scores, lambda x: x > 0)
+        streaks = [sum(1 for _ in group) if key else 0 for key, group in grouped]
+
+        # distribution totals
+        distribution = {i: Counter(self.scores)[i] for i in range(1, 7)}
+
+        return {
+            'Played': played,
+            'Win %': win_percent,
+            'Current streak': streaks[-1],
+            'Max streak': max(streaks),
+            'Guess distribution': distribution
+        }
 
     @property
     def turn(self):
@@ -180,7 +207,7 @@ class Wordle:
     def update_game(self, scored_guess: list):
         """
         Update game elements at end of turn. If game solved or over, change
-        state. Record game score in stats. Return appropriate response.
+        state. Record game score in scores. Return appropriate response.
         """
 
         # will remain empty for a valid guess in a non-winning, non-losing turn
@@ -188,13 +215,13 @@ class Wordle:
 
         # if solved
         if all(score is LetterScore.CORRECT for _, score in scored_guess):
-            self.stats.append(self.turn)
+            self.scores.append(self.turn)
             self.state = State.SOLVED
             response = Rating(self.turn).name
 
         # if game over
         elif self.turn == self.max_turns:
-            self.stats.append(0)
+            self.scores.append(0)
             self.state = State.GAMEOVER
             response = self.answer.upper()
 
