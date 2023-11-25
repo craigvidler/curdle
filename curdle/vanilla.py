@@ -37,28 +37,28 @@ def menu():
         if command == 'q':
             raise SystemExit()
         if command == 's':
-            print(format_stats(wordle.stats))
+            print(format_stats(wordle.scores))
         elif command == 'n':
             wordle.new_game()
             break
 
 
-def format_stats(stats: list):
-    """Turn wordle.stats into printable output."""
+def format_stats(scores: list):
+    """Turn wordle.scores into printable output."""
 
-    # Eg `stats` might equal [0, 0, 4, 6, 0, 3], meaning game 1 lost, game 2
+    # Eg `scores` might equal [0, 0, 4, 6, 0, 3], meaning game 1 lost, game 2
     # lost, game 3 won in turn 4, game 4 won in turn 6, game 5 lost, game 6
     # won in turn 3. `streaks` would then equal [0, 2, 0, 1]. (Retain zeroes
     # since current streak might be 0.)
 
     # total number of games
-    played = len(stats)
+    played = len(scores)
 
     # positive numbers as a %age of all numbers
-    win_percent = round(sum(game > 0 for game in stats) / played * 100)
+    win_percent = round(sum(game > 0 for game in scores) / played * 100)
 
     # stats grouped into summed streaks and zeros
-    grouped = groupby(stats, lambda x: x > 0)
+    grouped = groupby(scores, lambda x: x > 0)
     streaks = [sum(1 for _ in group) if key else 0 for key, group in grouped]
 
     label_style = f'{LIGHT_GREY}{BLACK_TEXT}'
@@ -71,16 +71,16 @@ def format_stats(stats: list):
         f'{label_style} Current streak {value_style} {streaks[-1]} {RESET}   '
         f'{label_style} Max streak {value_style} {max(streaks)} {RESET}\n\n'
         f'Guess distribution: \n\n'
-        f'{histo(stats)}'
+        f'{histo(scores)}'
     )
 
 
-def histo(stats: list):
-    """Turn wordle.stats into a histogram"""
+def histo(scores: list):
+    """Turn wordle.scores into a histogram"""
 
     MAX_SIZE = 24
     output = ''
-    totals = Counter(stats)
+    totals = Counter(scores)
 
     # extract biggest value (ie most common score) upfront (other bars sized
     # proportionally to it). Provide a default in case there's no non-zero
@@ -90,7 +90,7 @@ def histo(stats: list):
     # Ensure all keys 1-6 are present, with a 0 default val
     for k, v in [(i, totals.get(i, 0)) for i in range(1, 7)]:
         # latest score highlighted in green
-        bg_color = GREEN if k == stats[-1] else DARK_GREY
+        bg_color = GREEN if k == scores[-1] else DARK_GREY
         spaces = ' ' * round(MAX_SIZE * (v / biggest))  # size the bar
         output += f' {k} {bg_color}{spaces}{WHITE_TEXT} {v} {RESET}\n'
 

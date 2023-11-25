@@ -93,6 +93,12 @@ class Wordle:
         self.scores = []  # record game results per session
 
     @property
+    def qwerty(self):
+        """Return the tracker formatted in qwerty order/layout."""
+        rows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm']
+        return [{letter: self.tracker[letter] for letter in row} for row in rows]
+
+    @property
     def stats(self):
         """Turn Wordle.scores into a stats dictionary."""
 
