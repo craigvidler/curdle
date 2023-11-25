@@ -47,6 +47,7 @@ class Wordle:
         self.tracker = {}  # record guessed letters
         self.scores = []  # record game results per session
         self.alert = None  # ≈ popup message to user
+        self.observers = []  # for MVC with Observer pattern
 
     @property
     def qwerty(self):
@@ -89,9 +90,48 @@ class Wordle:
         if letter in ascii_letters and len(self.current_guess) < 5:
             self.current_guess += letter.lower()
 
+    def attach(self, observer):
+        """Enable observer to add itself to the list."""
+        self.observers.append(observer)
+
+    def check_error(self, guess):
+        """Check for errors: return Error if invalid or None if valid."""
+        if len(guess) < 5:
+            return Error.TOOSHORT
+        elif guess not in self.valid_guesses:
+            return Error.INVALID
+
     def delete_letter(self, letter):
         """Delete a letter from current guess."""
         self.current_guess = self.current_guess[:-1]
+
+    def finish_turn(self):
+        """
+        Update game elements at end of turn. If game solved or over, change
+        app_status. Record game score in scores. Return appropriate response.
+        """
+
+        # will remain empty for a valid guess in a non-winning, non-losing turn
+        response = ''
+
+        # if solved
+        if all(score is LetterScore.CORRECT
+               for _, score in self.previous_guesses[-1]):
+            self.scores.append(self.turn)
+            self.app_status = AppStatus.SOLVED
+            response = Rating(self.turn)
+
+        # if game over
+        elif self.turn == self.MAX_TURNS:
+            self.scores.append(0)
+            self.app_status = AppStatus.GAMEOVER
+            response = self.answer.upper()
+
+        # in all cases: update tracker, reset current guess buffer
+        self.update_tracker()
+        self.current_guess = ''
+
+        return response
 
     def load_wordlist(self, filename: str):
         """Load a wordlist and return it in a list."""
@@ -99,7 +139,7 @@ class Wordle:
             return f.read().splitlines()
 
     def new_game(self):
-        """Set/reset here anything needed to support multiple games"""
+        """Set/reset here anything needed to support multiple games."""
 
         # initialise tracker letters as UNGUESSED (ie 0/light grey)
         self.tracker = {letter: LetterScore.UNGUESSED for letter in a_to_z}
@@ -116,6 +156,11 @@ class Wordle:
         self.answer = self.given_answer or self.valid_answers.pop()
         self.app_status = AppStatus.PLAYING
         self.previous_guesses = []
+
+    def notify(self):
+        """Part of MVC/Observer pattern: tell observers model has changed."""
+        for observer in self.observers:
+            observer.update(self)
 
     def score_guess(self, guess: str):
         """
@@ -145,8 +190,8 @@ class Wordle:
 
     def submit(self, guess=''):
         """
-        Validate current guess, score it, update game, return a scored guess
-        as a list of tuples or None, plus a response or None.
+        Validate guess or current_guess, score it, save it, update game,
+        create response if required..
         """
 
         # The default expectation is letter-by-letter submission via
@@ -155,62 +200,28 @@ class Wordle:
         # command line which are limited to submitting the whole guess only.
         guess = guess or self.current_guess
 
-        # validate guess: if invalid, response is Error, scored_guess is empty
-        if error := self.validate(guess):
-            scored_guess, response = None, error
+        # check guess for errors: if invalid, response is Error
+        if error := self.check_error(guess):
+            response = error
 
-        # else score it, update game: response returns empty, Rating or answer
+        # else score it, save it, finish turn
         else:
             scored_guess = self.score_guess(guess)
-            response = self.update_game(scored_guess)
+            self.previous_guesses.append(scored_guess)
+            # response returns empty, Rating or answer
+            response = self.finish_turn()
 
         self.alert = response
-        return scored_guess, response  # FIXME: no need to return these now?
+        self.notify()  # signal model change to observers
 
-    def update_game(self, scored_guess: list):
-        """
-        Update game elements at end of turn. If game solved or over, change
-        app_status. Record game score in scores. Return appropriate response.
-        """
-
-        # will remain empty for a valid guess in a non-winning, non-losing turn
-        response = ''
-
-        # if solved
-        if all(score is LetterScore.CORRECT for _, score in scored_guess):
-            self.scores.append(self.turn)
-            self.app_status = AppStatus.SOLVED
-            response = Rating(self.turn)
-
-        # if game over
-        elif self.turn == self.MAX_TURNS:
-            self.scores.append(0)
-            self.app_status = AppStatus.GAMEOVER
-            response = self.answer.upper()
-
-        # in all cases: update tracker, save the scored guess, reset current
-        # guess buffer
-        self.update_tracker(scored_guess)
-        self.previous_guesses.append(scored_guess)
-        self.current_guess = ''
-
-        return response
-
-    def update_tracker(self, scored_guess: list):
+    def update_tracker(self):
         """
         Update tracker with each letter from `scored_guess`.
         Only change a letter's score if it's to a higher one.
         """
-        for letter, score in scored_guess:
+        for letter, score in self.previous_guesses[-1]:
             if score > self.tracker[letter]:
                 self.tracker[letter] = score
-
-    def validate(self, guess):
-        """Validate guess: return None if valid, Error if invalid."""
-        if len(guess) < 5:
-            return Error.TOOSHORT
-        elif guess not in self.valid_guesses:
-            return Error.INVALID
 
 
 class AppStatus(str, Enum):

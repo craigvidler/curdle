@@ -6,11 +6,12 @@ import sys
 def main():
     # Pass in answer if required during dev
     answer = sys.argv[1] if len(sys.argv) > 1 else ''
-    view = View()
     wordle = Wordle(answer)  # game object/model
+    view = View(wordle)  # pass in wordle (model) to make observer link
+
     wordle.new_game()
-    wordle.submit()
-    view.draw(wordle)
+    wordle.submit('slate')
+    wordle.submit('yetis')
 
 
 if __name__ == '__main__':

@@ -59,10 +59,10 @@ def main():
 
 
 class View:
-    def __init__(self):
-        pass
+    def __init__(self, model):
+        model.attach(self)
 
-    def draw(self, wordle):
+    def update(self, wordle):
         print(wordle.app_status)
         print(wordle.turn)
         print(wordle.previous_guesses)
