@@ -1,64 +1,19 @@
 """
-Models the core game logic of Wordle. As part of an MVC app, UI is left to a
-front end (the client code using this class). See README.md for details.
+Models the core game logic of Wordle. Designed to be used as part of an MVC
+app or similar structure where UI is left to a front end (the client code
+using this class). See README.md for details.
 """
 
 from collections import Counter
-from enum import Enum, IntEnum, auto
+from enum import Enum, IntEnum
 from itertools import groupby
 from random import shuffle
 from string import ascii_letters, ascii_lowercase as a_to_z
 
 
-class LetterScore(IntEnum):
-    # Using an IntEnum so we can do > comparison, and to access the int value
-    # outside the module without importing LetterScore or using .value.
-    UNGUESSED = 0
-    ABSENT = 1
-    PRESENT = 2
-    CORRECT = 3
-
-
-class State(str, Enum):
-    # StrEnum preferable here for ease of use (no imports or .value needed
-    # outside the module), but like this avoids requiring Py3.11.
-    START = 'start'
-    PLAYING = 'playing'
-    GAMEOVER = 'game over'
-    SOLVED = 'solved'
-
-
-class Error(str, Enum):
-    # As above. Also, __str__ because Errors will be output not just checked
-    # like States, and it avoids needing `.value` below.
-    TOOSHORT = 'Not enough letters'
-    INVALID = 'Not in word list'
-
-    def __str__(self):
-        return self.value
-
-
-class Rating(Enum):
-    # This probably shouldn't be an enum, could move elsewhere
-    Genius = 1
-    Magnificent = 2
-    Impressive = 3
-    Splendid = 4
-    Great = 5
-    Phew = 6
-
-
-class MenuOption(IntEnum):
-    """Menu options. Provide int or string based on name as needed."""
-    NEW_GAME = auto()
-    STATS = auto()
-    EXIT = auto()
-
-    def __str__(self):
-        return self.name.replace('_', ' ')
-
-
 class Menu:
+    """Provide a game menu based on MenuOptions."""
+
     def __init__(self):
         self.options = MenuOption
         self.selected = self.options(1)  # default to first item
@@ -87,8 +42,8 @@ class Wordle:
         self.previous_guesses = []  # record of submitted, scored guesses
         self.current_guess = ''  # buffer for guess-in-progress before submit
 
-        self.state = State.START
-        self.max_turns = 6
+        self.app_status = AppStatus.START
+        self.MAX_TURNS = 6
         self.tracker = {}  # record guessed letters
         self.scores = []  # record game results per session
 
@@ -158,7 +113,7 @@ class Wordle:
         # just set `self.answer` directly in init without `given_answer`
         # buffer, or renewing answer in subsequent games prevented here.
         self.answer = self.given_answer or self.valid_answers.pop()
-        self.state = State.PLAYING
+        self.app_status = AppStatus.PLAYING
         self.previous_guesses = []
 
     def score_guess(self, guess: str):
@@ -213,7 +168,7 @@ class Wordle:
     def update_game(self, scored_guess: list):
         """
         Update game elements at end of turn. If game solved or over, change
-        state. Record game score in scores. Return appropriate response.
+        app_status. Record game score in scores. Return appropriate response.
         """
 
         # will remain empty for a valid guess in a non-winning, non-losing turn
@@ -222,13 +177,13 @@ class Wordle:
         # if solved
         if all(score is LetterScore.CORRECT for _, score in scored_guess):
             self.scores.append(self.turn)
-            self.state = State.SOLVED
-            response = Rating(self.turn).name
+            self.app_status = AppStatus.SOLVED
+            response = Rating(self.turn)
 
         # if game over
-        elif self.turn == self.max_turns:
+        elif self.turn == self.MAX_TURNS:
             self.scores.append(0)
-            self.state = State.GAMEOVER
+            self.app_status = AppStatus.GAMEOVER
             response = self.answer.upper()
 
         # in all cases: update tracker, save the scored guess, reset current
@@ -254,3 +209,64 @@ class Wordle:
             return Error.TOOSHORT
         elif guess not in self.valid_guesses:
             return Error.INVALID
+
+
+class AppStatus(str, Enum):
+    """
+    Encode top-level game status. StrEnum preferable here for ease of use
+    (no imports or .value needed outside the module), but like this avoids
+    requiring Py3.11.
+    """
+    START = 'start'
+    PLAYING = 'playing'
+    GAMEOVER = 'gameover'
+    SOLVED = 'solved'
+    MENU = 'menu'
+    STATS = 'stats'
+
+
+class Error(str, Enum):
+    """
+    Encode the error messages. As AppStatus but also __str__ because Error
+    will be output not just checked, and it avoids needing `.value` below.
+    """
+    TOOSHORT = 'Not enough letters'
+    INVALID = 'Not in word list'
+
+    def __str__(self):
+        return self.value
+
+
+class LetterScore(IntEnum):
+    """
+    Encode the status of letters in a scored guess (≈ yellow, green etc).
+    Use an IntEnum so we can do > comparison, and to access the int value
+    outside the module without importing LetterScore or using .value.
+    """
+    UNGUESSED = 0
+    ABSENT = 1
+    PRESENT = 2
+    CORRECT = 3
+
+
+class MenuOption(IntEnum):
+    """Encode menu options. Provide int or string based on name as needed."""
+    NEW_GAME = 1
+    STATS = 2
+    EXIT = 3
+
+    def __str__(self):
+        return self.name.replace('_', ' ')
+
+
+class Rating(Enum):
+    """Map between turn/score for completed game and end of game message."""
+    GENIUS = 1
+    MAGNIFICENT = 2
+    IMPRESSIVE = 3
+    SPLENDID = 4
+    GREAT = 5
+    PHEW = 6
+
+    def __str__(self):
+        return self.name.capitalize()
