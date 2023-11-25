@@ -1,16 +1,17 @@
-from curdle.controller import Controller
 from curdle.model import Wordle
-from curdle.view import View
-import curses
+from vanilla.view import View
 import sys
 
 
-def main(stdscr):
+def main():
     # Pass in answer if required during dev
     answer = sys.argv[1] if len(sys.argv) > 1 else ''
+    view = View()
     wordle = Wordle(answer)  # game object/model
-    view = View(curses, stdscr)
-    Controller(view, wordle).run()
+    wordle.new_game()
+    wordle.submit()
+    view.draw(wordle)
 
 
-curses.wrapper(main)
+if __name__ == '__main__':
+    main()
