@@ -46,6 +46,7 @@ class Wordle:
         self.MAX_TURNS = 6
         self.tracker = {}  # record guessed letters
         self.scores = []  # record game results per session
+        self.alert = None  # ≈ popup message to user
 
     @property
     def qwerty(self):
@@ -163,7 +164,8 @@ class Wordle:
             scored_guess = self.score_guess(guess)
             response = self.update_game(scored_guess)
 
-        return scored_guess, response
+        self.alert = response
+        return scored_guess, response  # FIXME: no need to return these now?
 
     def update_game(self, scored_guess: list):
         """
