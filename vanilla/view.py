@@ -12,7 +12,7 @@ RESET = '\u001b[0m'
 
 
 def colorize(scored_list: list):
-    """expect a list of tuple pairs [(letter, score)…], return color version"""
+    """expect a list of tuple pairs [(letter, score)…], return color version."""
     output = ''
     for letter, score in scored_list:
         text_color = BLACK_TEXT if not score else WHITE_TEXT
@@ -33,39 +33,44 @@ def menu():
             break
 
 
-def main():
-    """main loop, manages interface between UI and wordle object"""
+# def main():
+#     """main loop, manages interface between UI and wordle object"""
 
-    # loop every turn
-    while wordle.state == 'playing':
+#     # loop every turn
+#     while wordle.state == 'playing':
 
-        # input
-        guess = input(f'Guess #{wordle.turn }: ').lower()
+#         # input
+#         guess = input(f'Guess #{wordle.turn }: ').lower()
 
-        # submit input; output error message if any
-        scored_guess, response = wordle.submit(guess)
-        if not scored_guess:
-            print(response, '\n')
-            continue
+#         # submit input; output error message if any
+#         scored_guess, response = wordle.submit(guess)
+#         if not scored_guess:
+#             print(response, '\n')
+#             continue
 
-        # output colored guess and updated tracker if valid guess
-        print(colorize(scored_guess), '  ', end='')
-        print(colorize(wordle.tracker.items()), '\n')
-
-        # output message if solved or game over, enable menu
-        if wordle.state != 'playing':
-            print(response)
-            menu()
+#         # output colored guess and updated tracker if valid guess
+#         print(colorize(scored_guess), '  ', end='')
+#         print(colorize(wordle.tracker.items()), '\n')
 
 
 class View:
     def __init__(self, model):
+
+        # Observer pattern: model will call update() when state changed
         model.attach(self)
 
     def update(self, wordle):
-        print(wordle.app_status)
-        print(wordle.turn)
-        print(wordle.previous_guesses)
-        print(wordle.current_guess)
-        print(wordle.qwerty)
-        print(wordle.alert)
+
+        # output colored guess and updated tracker if valid guess
+        if not wordle.alert:
+            print('       ', colorize(wordle.previous_guesses[-1]), '\n')
+            for i, row in enumerate(wordle.qwerty):
+                spaces = ('', ' ', '    ')
+                print(spaces[i], colorize(row))
+        else:
+            print(wordle.alert)
+
+        # output message if solved or game over, enable menu
+        if wordle.app_status != 'playing':
+            # print(wordle.alert)
+            menu()
