@@ -1,3 +1,6 @@
+from .config import AppStatus
+
+
 class Controller:
     def __init__(self, wordle, view):
         self.wordle = wordle
@@ -16,5 +19,6 @@ class Controller:
 
         self.wordle.new_game()
 
-        while self.wordle.app_status == 'playing':
+        while self.wordle.app_status is AppStatus.PLAYING:
+            # pass turn number and callback to view input method
             self.view.get_input(self.handle_guess, self.wordle.turn)

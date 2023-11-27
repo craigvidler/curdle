@@ -1,5 +1,5 @@
+from curdle.config import AppStatus, Error
 from itertools import zip_longest
-from curdle.model import Error
 
 # ANSI codes for background colours and text
 LIGHT_GREY = '\u001b[48;5;253m'
@@ -7,12 +7,14 @@ GREY = '\u001b[48;5;245m'
 DARK_GREY = '\u001b[48;5;239m'
 YELLOW = '\u001b[48;5;136m'
 GREEN = '\u001b[48;5;28m'
-BG_COLORS = (GREY, DARK_GREY, YELLOW, GREEN, LIGHT_GREY)
 
 BLACK_TEXT = '\u001b[38;5;235m'
 WHITE_TEXT = '\u001b[37m'
 BOLD = '\u001b[1m'
 RESET = '\u001b[0m'
+
+# A mapping of eg GREEN to 3 etc for letter scores. L GREY for blanks.
+BG_COLORS = (GREY, DARK_GREY, YELLOW, GREEN, LIGHT_GREY)
 
 
 def colorize(scored_list: list):
@@ -37,26 +39,6 @@ def menu():
             break
 
 
-# def main():
-#     """main loop, manages interface between UI and wordle object"""
-
-#     # loop every turn
-#     while wordle.state == 'playing':
-
-#         # input
-#         guess = input(f'Guess #{wordle.turn }: ').lower()
-
-#         # submit input; output error message if any
-#         scored_guess, response = wordle.submit(guess)
-#         if not scored_guess:
-#             print(response, '\n')
-#             continue
-
-#         # output colored guess and updated tracker if valid guess
-#         print(colorize(scored_guess), '  ', end='')
-#         print(colorize(wordle.tracker.items()), '\n')
-
-
 class View:
     def __init__(self, model):
 
@@ -74,7 +56,7 @@ class View:
     def update(self, wordle):
 
         # if no error
-        if wordle.alert not in ('Not enough letters', 'Not in word list'):
+        if not isinstance(wordle.alert, Error):
             self.draw_guesses(wordle)
             self.draw_alert(str(wordle.alert))
             self.draw_qwerty(wordle.qwerty)
@@ -82,7 +64,7 @@ class View:
             print(wordle.alert)
 
         # enable menu if solved or game over
-        if wordle.app_status != 'playing':
+        if wordle.app_status is AppStatus.PLAYING:
             menu()
 
     def draw_guesses(self, wordle):
