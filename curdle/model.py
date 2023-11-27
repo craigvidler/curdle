@@ -1,14 +1,14 @@
 """
-Models the core game logic of Wordle. Designed to be used as part of an MVC
+Model the core game logic of Wordle. Designed to be used as part of an MVC
 app or similar structure where UI is left to a front end (the client code
 using this class). See README.md for details.
 """
 
 from collections import Counter
+from .config import AppStatus, Error, LetterScore, MenuOption, Rating
 from itertools import groupby
 from random import shuffle
 from string import ascii_letters, ascii_lowercase as a_to_z
-from .config import AppStatus, Error, LetterScore, MenuOption, Rating
 
 
 class Menu:
@@ -219,5 +219,4 @@ class Wordle:
         Only change a letter's score if it's to a higher one.
         """
         for letter, score in self.previous_guesses[-1]:
-            if score > self.tracker[letter]:
-                self.tracker[letter] = score
+            self.tracker[letter] = max(self.tracker[letter], score)

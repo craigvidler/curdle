@@ -1,4 +1,4 @@
-from .config import AppStatus
+from curdle.config import AppStatus
 
 
 class Controller:

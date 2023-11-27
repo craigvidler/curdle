@@ -55,16 +55,16 @@ class View:
 
     def update(self, wordle):
 
-        # if no error
-        if not isinstance(wordle.alert, Error):
+        # if error
+        if isinstance(wordle.alert, Error):
+            print(wordle.alert)
+        else:
             self.draw_guesses(wordle)
             self.draw_alert(str(wordle.alert))
             self.draw_qwerty(wordle.qwerty)
-        else:
-            print(wordle.alert)
 
         # enable menu if solved or game over
-        if wordle.app_status is AppStatus.PLAYING:
+        if wordle.app_status is not AppStatus.PLAYING:
             menu()
 
     def draw_guesses(self, wordle):
