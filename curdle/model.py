@@ -143,6 +143,8 @@ class Wordle:
 
         # initialise tracker letters as UNGUESSED (ie 0/light grey)
         self.tracker = {letter: LetterScore.UNGUESSED for letter in a_to_z}
+        self.previous_guesses = []
+        self.alert = ''
 
         # answers loaded here not in init, with shuffle/pop not random.choice,
         # to support arbitrarily many games with minimal answer repetition
@@ -155,7 +157,7 @@ class Wordle:
         # buffer, or renewing answer in subsequent games prevented here.
         self.answer = self.given_answer or self.valid_answers.pop()
         self.app_status = AppStatus.PLAYING
-        self.previous_guesses = []
+
         self.notify()  # signal game start to obervers
 
     def notify(self):
