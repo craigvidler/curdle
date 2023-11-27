@@ -1,9 +1,13 @@
+from itertools import zip_longest
+from curdle.model import Error
+
 # ANSI codes for background colours and text
-LIGHT_GREY = '\u001b[48;5;245m'
+LIGHT_GREY = '\u001b[48;5;253m'
+GREY = '\u001b[48;5;245m'
 DARK_GREY = '\u001b[48;5;239m'
 YELLOW = '\u001b[48;5;136m'
 GREEN = '\u001b[48;5;28m'
-BG_COLORS = (LIGHT_GREY, DARK_GREY, YELLOW, GREEN)
+BG_COLORS = (GREY, DARK_GREY, YELLOW, GREEN, LIGHT_GREY)
 
 BLACK_TEXT = '\u001b[38;5;235m'
 WHITE_TEXT = '\u001b[37m'
@@ -17,7 +21,7 @@ def colorize(scored_list: list):
     for letter, score in scored_list:
         text_color = BLACK_TEXT if not score else WHITE_TEXT
         bg_color = BG_COLORS[score]
-        output += f'{bg_color}{BOLD}{text_color} {letter.upper()} {RESET}'
+        output += f'{bg_color}{BOLD}{text_color} {letter.upper()} {RESET} '
     return output
 
 
@@ -59,18 +63,41 @@ class View:
         # Observer pattern: model will call update() when state changed
         model.attach(self)
 
+    def get_input(self, callback, turn):
+        guess = input(f'Round {turn}: ').lower()
+        callback(guess)
+
+    def draw_alert(self, alert):
+        spaces = (40 // 2 - len(alert) // 2) * ' '
+        print(spaces + alert)
+
     def update(self, wordle):
 
-        # output colored guess and updated tracker if valid guess
-        if not wordle.alert:
-            print('       ', colorize(wordle.previous_guesses[-1]), '\n')
-            for i, row in enumerate(wordle.qwerty):
-                spaces = ('', ' ', '    ')
-                print(spaces[i], colorize(row))
+        # if no error
+        if wordle.alert not in ('Not enough letters', 'Not in word list'):
+            self.draw_guesses(wordle)
+            self.draw_alert(str(wordle.alert))
+            self.draw_qwerty(wordle.qwerty)
         else:
             print(wordle.alert)
 
-        # output message if solved or game over, enable menu
+        # enable menu if solved or game over
         if wordle.app_status != 'playing':
-            # print(wordle.alert)
             menu()
+
+    def draw_guesses(self, wordle):
+        unguessed = [(' ', -1)] * 5
+        turns = range(wordle.MAX_TURNS)
+        previous = wordle.previous_guesses
+
+        print()
+        for _, guess in zip_longest(turns, previous, fillvalue=unguessed):
+            print('          ', colorize(guess))
+            print()
+
+    def draw_qwerty(self, qwerty):
+        print()
+        for i, row in enumerate(qwerty):
+            spaces = ('', '  ', '      ')
+            print(spaces[i], colorize(row))
+            print()

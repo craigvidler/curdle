@@ -46,7 +46,7 @@ class Wordle:
         self.MAX_TURNS = 6
         self.tracker = {}  # record guessed letters
         self.scores = []  # record game results per session
-        self.alert = None  # ≈ popup message to user
+        self.alert = ''  # ≈ popup message to user
         self.observers = []  # for MVC with Observer pattern
 
     @property
@@ -156,6 +156,7 @@ class Wordle:
         self.answer = self.given_answer or self.valid_answers.pop()
         self.app_status = AppStatus.PLAYING
         self.previous_guesses = []
+        self.notify()  # signal game start to obervers
 
     def notify(self):
         """Part of MVC/Observer pattern: tell observers model has changed."""

@@ -9,11 +9,12 @@ class Controller:
     #     """
     #     self.wordle.new_game()
 
+    def handle_guess(self, guess):
+        self.wordle.submit(guess)
+
     def run(self):
 
         self.wordle.new_game()
 
         while self.wordle.app_status == 'playing':
-            guess = input(f'Round {self.wordle.turn}: ').lower()
-            # guess = self.view.do_turn(turn)
-            self.wordle.submit(guess)
+            self.view.get_input(self.handle_guess, self.wordle.turn)
