@@ -5,10 +5,10 @@ using this class). See README.md for details.
 """
 
 from collections import Counter
-from enum import Enum, IntEnum
 from itertools import groupby
 from random import shuffle
 from string import ascii_letters, ascii_lowercase as a_to_z
+from .config import AppStatus, Error, LetterScore, MenuOption, Rating
 
 
 class Menu:
@@ -221,64 +221,3 @@ class Wordle:
         for letter, score in self.previous_guesses[-1]:
             if score > self.tracker[letter]:
                 self.tracker[letter] = score
-
-
-class AppStatus(str, Enum):
-    """
-    Encode top-level game status. StrEnum preferable here for ease of use
-    (no imports or .value needed outside the module), but like this avoids
-    requiring Py3.11.
-    """
-    START = 'start'
-    PLAYING = 'playing'
-    GAMEOVER = 'gameover'
-    SOLVED = 'solved'
-    MENU = 'menu'
-    STATS = 'stats'
-
-
-class Error(str, Enum):
-    """
-    Encode the error messages. As AppStatus but also __str__ because Error
-    will be output not just checked, and it avoids needing `.value` below.
-    """
-    TOOSHORT = 'Not enough letters'
-    INVALID = 'Not in word list'
-
-    def __str__(self):
-        return self.value
-
-
-class LetterScore(IntEnum):
-    """
-    Encode the status of letters in a scored guess (≈ yellow, green etc).
-    Use an IntEnum so we can do > comparison, and to access the int value
-    outside the module without importing LetterScore or using .value.
-    """
-    UNGUESSED = 0
-    ABSENT = 1
-    PRESENT = 2
-    CORRECT = 3
-
-
-class MenuOption(IntEnum):
-    """Encode menu options. Provide int or string based on name as needed."""
-    NEW_GAME = 1
-    STATS = 2
-    EXIT = 3
-
-    def __str__(self):
-        return self.name.replace('_', ' ')
-
-
-class Rating(Enum):
-    """Map between turn/score for completed game and end of game message."""
-    GENIUS = 1
-    MAGNIFICENT = 2
-    IMPRESSIVE = 3
-    SPLENDID = 4
-    GREAT = 5
-    PHEW = 6
-
-    def __str__(self):
-        return self.name.capitalize()
