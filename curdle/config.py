@@ -1,6 +1,23 @@
 from enum import Enum, IntEnum
 
 
+class AnsiCode(str, Enum):
+    LIGHT_GREY = '\u001b[48;5;253m'
+    GREY = '\u001b[48;5;245m'
+    DARK_GREY = '\u001b[48;5;239m'
+    YELLOW = '\u001b[48;5;136m'
+    GREEN = '\u001b[48;5;28m'
+    RED = '\u001b[48;5;124m'
+
+    BLACK_TEXT = '\u001b[38;5;235m'
+    WHITE_TEXT = '\u001b[37m'
+    BOLD = '\u001b[1m'
+    RESET = '\u001b[0m'
+
+    def __str__(self):
+        return self.value
+
+
 class AppStatus(str, Enum):
     """
     Encode top-level game status. StrEnum preferable here for ease of use
