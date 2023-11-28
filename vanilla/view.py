@@ -44,9 +44,42 @@ class View:
         key = input(f'{prompt}: ')
         return options.get(key, None)
 
-    def get_input(self, callback, turn):
-        guess = input(f'Round {turn}: ').lower()
-        callback(guess)
+    def stats(self, stats: dict):
+        label_style = f'{GREY}{BLACK_TEXT}'
+        value_style = f'{DARK_GREY}{BOLD}{WHITE_TEXT}'
+
+        return (
+            '\n\n'
+            f' {label_style} Played      {value_style} {stats["played"]} {RESET}    '
+            f'{label_style} Current streak {value_style} {stats["current"]} {RESET}\n\n'
+            f' {label_style} Win %     {value_style} {stats["wins"]} {RESET}   '
+            f' {label_style} Max streak     {value_style} {stats["max"]} {RESET}\n\n'
+            ' Guess distribution: \n\n'
+            f'{self.histo(stats["distribution"], stats["last"])}'
+        )
+
+    def histo(self, totals: dict, last: int):
+        """Turn wordle.stats distribution into a histogram."""
+
+        MAX_SIZE = 34
+        output = ''
+
+        # extract biggest value (ie most common score) upfront (other bars sized
+        # proportionally to it). Provide a default in case there's no non-zero
+        # score yet (`max([])` causes error).
+        biggest = max([v for k, v in totals.items() if k > 0], default=1)
+
+        # Ensure all keys 1-6 are present, with a 0 default val
+        for k, v in totals.items():
+            # latest score highlighted in green
+            bg_color = GREEN if k == last else DARK_GREY
+            spaces = ' ' * round(MAX_SIZE * (v / biggest))  # size the bar
+            output += f' {k} {bg_color}{spaces}{WHITE_TEXT} {v} {RESET}\n'
+
+        return output
+
+    def get_input(self, turn):
+        return input(f'Round {turn}: ').lower()
 
     def draw_alert(self, alert):
         if alert:

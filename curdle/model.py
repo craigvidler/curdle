@@ -57,7 +57,12 @@ class Wordle:
 
     @property
     def stats(self):
-        """Turn Wordle.scores into a stats dictionary."""
+        """Turn self.scores into a stats dictionary."""
+
+        # Eg `stats` might equal [0, 0, 4, 6, 0, 3], meaning game 1 lost, game 2
+        # lost, game 3 won in turn 4, game 4 won in turn 6, game 5 lost, game 6
+        # won in turn 3. `streaks` would then equal [0, 2, 0, 1]. (Retain zeroes
+        # since current streak might be 0.)
 
         # total number of games
         played = len(self.scores)
@@ -73,11 +78,12 @@ class Wordle:
         distribution = {i: Counter(self.scores)[i] for i in range(1, 7)}
 
         return {
-            'Played': played,
-            'Win %': win_percent,
-            'Current streak': streaks[-1],
-            'Max streak': max(streaks),
-            'Guess distribution': distribution
+            'played': played,
+            'wins': win_percent,
+            'current': streaks[-1],
+            'max': max(streaks),
+            'distribution': distribution,
+            'last': self.scores[-1] if self.scores else 0
         }
 
     @property
