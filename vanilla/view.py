@@ -35,7 +35,7 @@ class View:
             options[label[0].lower()] = option
             prompt.append(f'[{label[0]}]{label[1:].lower()}')
         prompt = ", ".join(prompt)
-        key = input(f'{prompt}: ')
+        key = input(f'{prompt}: ').lower()
         return options.get(key, None)
 
     def stats(self, stats: dict):
