@@ -78,3 +78,13 @@ class Rating(Enum):
 
     def __str__(self):
         return self.name.capitalize()
+
+# For vanilla app: a mapping of eg GREEN to 3 etc for letter scores. L GREY
+# (-1) for blanks.
+SCORE_COLORS = (
+    AnsiCode.GREY,
+    AnsiCode.DARK_GREY,
+    AnsiCode.YELLOW,
+    AnsiCode.GREEN,
+    AnsiCode.LIGHT_GREY
+)
