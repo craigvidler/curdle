@@ -1,5 +1,4 @@
-from curdle.config import AnsiCode, SCORE_COLORS, AppStatus, Error, MenuOption
-from itertools import zip_longest
+from curdle.config import AnsiCode as Code, SCORE_COLORS, Error, MenuOption
 
 
 class View:
@@ -12,10 +11,10 @@ class View:
         """expect a list of tuple pairs [(letter, score)…], return color version."""
         output = ''
         for letter, score in scored_list:
-            text_color = AnsiCode.BLACK_TEXT if not score else AnsiCode.WHITE_TEXT
+            text_color = Code.BLACK_TEXT if not score else Code.WHITE_TEXT
             score_color = SCORE_COLORS[score]
-            output += (f'{score_color}{AnsiCode.BOLD}{text_color} '
-                       f'{letter.upper()} {AnsiCode.RESET} ')
+            output += (f'{score_color}{Code.BOLD}{text_color} '
+                       f'{letter.upper()} {Code.RESET} ')
         return output
 
     def menu(self):
@@ -44,18 +43,19 @@ class View:
 
     def draw_guesses(self, game_state):
         blank_row = [(' ', -1)] * 5  # -1 == LIGHT_GREY
-        turns = range(game_state.MAX_TURNS)
-        previous = game_state.previous_guesses
+        blank_rows_needed = game_state.MAX_TURNS - len(game_state.previous_guesses)
+        blank_rows = [blank_row] * blank_rows_needed
+        rows = game_state.previous_guesses + blank_rows
 
         print('\n')
-        for _, guess in zip_longest(turns, previous, fillvalue=blank_row):
-            print('          ', self.colorize(guess))
+        for row in rows:
+            print('          ', self.colorize(row))
             print()
 
     def draw_alert(self, alert):
         if alert:
             spaces = (38 // 2 - len(alert) // 2) * ' '
-            alert = f'{spaces}{AnsiCode.RED} {alert} {AnsiCode.RESET}'
+            alert = f'{spaces}{Code.RED} {alert} {Code.RESET}'
         else:
             alert = ''
         print(alert)
@@ -68,19 +68,19 @@ class View:
             print()
 
     def stats(self, stats: dict):
-        label_style = f'{AnsiCode.GREY}{AnsiCode.BLACK_TEXT}'
-        value_style = f'{AnsiCode.DARK_GREY}{AnsiCode.BOLD}{AnsiCode.WHITE_TEXT}'
+        label_style = f'{Code.GREY}{Code.BLACK_TEXT}'
+        value_style = f'{Code.DARK_GREY}{Code.BOLD}{Code.WHITE_TEXT}'
 
         print(
             '\n\n'
             f' {label_style} Played      '
-            f'{value_style} {stats["played"]} {AnsiCode.RESET}    '
+            f'{value_style} {stats["played"]} {Code.RESET}    '
             f'{label_style} Current streak '
-            f'{value_style} {stats["current"]} {AnsiCode.RESET}\n\n'
+            f'{value_style} {stats["current"]} {Code.RESET}\n\n'
             f' {label_style} Win %     '
-            f'{value_style} {stats["wins"]} {AnsiCode.RESET}   '
+            f'{value_style} {stats["wins"]} {Code.RESET}   '
             f' {label_style} Max streak     '
-            f'{value_style} {stats["max"]} {AnsiCode.RESET}\n\n'
+            f'{value_style} {stats["max"]} {Code.RESET}\n\n'
             ' Guess distribution: \n\n'
             f'{self.histo(stats["distribution"], stats["last"])}'
         )
@@ -99,8 +99,8 @@ class View:
         # Draw each value as a bar sized relative to largest
         for k, v in totals.items():
             # latest score highlighted in green
-            score_color = AnsiCode.GREEN if k == last else AnsiCode.DARK_GREY
+            score_color = Code.GREEN if k == last else Code.DARK_GREY
             spaces = ' ' * round(MAX_SIZE * (v / biggest))  # size the bar
-            output += (f' {k} {score_color}{spaces}{AnsiCode.WHITE_TEXT} {v} '
-                       f'{AnsiCode.RESET}\n')
+            output += (f' {k} {score_color}{spaces}{Code.WHITE_TEXT} {v} '
+                       f'{Code.RESET}\n')
         return output
