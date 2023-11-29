@@ -26,6 +26,6 @@ class Controller:
         self.wordle.new_game()
 
         while True:
-            self.handle_input()
+            self.handle_guess()
             if self.wordle.app_status is not AppStatus.PLAYING:
                 self.handle_menu()
