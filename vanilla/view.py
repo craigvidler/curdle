@@ -6,17 +6,22 @@ APP_WIDTH = 42
 
 class View:
     def __init__(self, model):
+        """Initiate the view object."""
 
-        # Observer pattern: model will call update() when state changed
+        # Observer pattern: model will call self.update() when game state changed
         model.attach(self)
 
     def center(self, line: str):
+        """Center a given string within the game board width."""
         stripped = re.sub(r'\x1b.*?m', '', line)  # remove ANSI codes
         left_spaces = ((APP_WIDTH - len(stripped)) // 2) * ' '
         return left_spaces + line
 
     def colorize(self, scored_list: list):
-        """expect a list of tuple pairs [(letter, score)…], return color version."""
+        """
+        Expect a list of tuple pairs [(letter, score)…], return a
+        corresponding string colored using ANSI codes.
+        """
         output = ''
         for letter, score in scored_list:
             text_color = Code.BLACK_TEXT if not score else Code.WHITE_TEXT
@@ -25,7 +30,8 @@ class View:
                        f'{letter.upper()} {Code.RESET} ')
         return output
 
-    def menu(self):
+    def show_menu(self):
+        """Print menu prompt and return user's menu choice."""
         prompt = []
         options = {}
         for option in MenuOption:
@@ -36,20 +42,25 @@ class View:
         key = input(f'{prompt}: ').lower()
         return options.get(key, None)
 
-    def get_input(self, turn):
+    def get_input(self, turn: int):
+        """Return input during game round (ie a guess)."""
         return input(f'Round {turn}: ').lower()
 
     def update(self, game_state):
+        """Print game state to screen. Called from model (Observer pattern)."""
 
-        # if error
+        # if there's an error, just print that
         if isinstance(game_state.alert, Error):
             print(game_state.alert)
-        else:
+        else:  # else print whole game board
             self.draw_guesses(game_state)
-            self.draw_alert(str(game_state.alert))
+            self.draw_alert(game_state.alert)
             self.draw_qwerty(game_state.qwerty)
 
     def draw_guesses(self, game_state):
+        """
+        Print guesses board. Previous guesses, then blank rows to a total of 6.
+        """
         blank_row = [(' ', -1)] * 5  # -1 == LIGHT_GREY
         blank_rows_needed = game_state.MAX_TURNS - len(game_state.previous_guesses)
         blank_rows = [blank_row] * blank_rows_needed
@@ -61,19 +72,19 @@ class View:
             print()
 
     def draw_alert(self, alert):
-        if alert:
-            alert = self.center(f'{Code.RED} {alert} {Code.RESET}')
-        else:
-            alert = ''
+        """Print an alert box with game message or blank line if none."""
+        alert = self.center(f'{Code.RED} {alert} {Code.RESET}') if alert else ''
         print(alert)
 
-    def draw_qwerty(self, qwerty):
+    def draw_qwerty(self, qwerty: list):
+        """Print the qwerty layout letter tracker."""
         print()
         for i, row in enumerate(qwerty):
             print(self.center(self.colorize(row)))
             print()
 
     def stats(self, stats: dict):
+        """Print stats based on previous game scores."""
         label_style = f'{Code.GREY}{Code.BLACK_TEXT}'
         value_style = f'{Code.DARK_GREY}{Code.BOLD}{Code.WHITE_TEXT}'
 

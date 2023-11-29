@@ -8,7 +8,7 @@ class Controller:
 
     def handle_menu(self):
         while True:
-            option = self.view.menu()
+            option = self.view.show_menu()
 
             if option is MenuOption.NEW_GAME:
                 self.wordle.new_game()
