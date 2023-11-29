@@ -14,7 +14,7 @@ class Controller:
                 self.wordle.new_game()
                 break
             if option is MenuOption.STATS:
-                print(self.view.stats(self.wordle.stats))
+                self.view.stats(self.wordle.stats)
             if option is MenuOption.EXIT:
                 raise SystemExit()
 

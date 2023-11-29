@@ -42,7 +42,7 @@ class View:
         label_style = f'{AnsiCode.GREY}{AnsiCode.BLACK_TEXT}'
         value_style = f'{AnsiCode.DARK_GREY}{AnsiCode.BOLD}{AnsiCode.WHITE_TEXT}'
 
-        return (
+        print(
             '\n\n'
             f' {label_style} Played      '
             f'{value_style} {stats["played"]} {AnsiCode.RESET}    '
