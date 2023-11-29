@@ -6,7 +6,7 @@ class Controller:
         self.wordle = wordle
         self.view = view
 
-    def menu(self):
+    def handle_menu(self):
         while True:
             option = self.view.menu()
 
@@ -18,14 +18,14 @@ class Controller:
             if option is MenuOption.EXIT:
                 raise SystemExit()
 
-    def handle_input(self):
-        input_ = self.view.get_input(self.wordle.turn)
-        self.wordle.submit(input_)
+    def handle_guess(self):
+        guess = self.view.get_input(self.wordle.turn)
+        self.wordle.submit(guess)
 
     def run(self):
         self.wordle.new_game()
 
-        while self.wordle.app_status is AppStatus.PLAYING:
+        while True:
             self.handle_input()
             if self.wordle.app_status is not AppStatus.PLAYING:
-                self.menu()
+                self.handle_menu()
