@@ -32,14 +32,12 @@ class View:
 
     def show_menu(self):
         """Print menu prompt and return user's menu choice."""
-        prompt = []
-        options = {}
-        for option in MenuOption:
-            label = str(option)
-            options[label[0].lower()] = option
-            prompt.append(f'[{label[0]}]{label[1:].lower()}')
-        prompt = ", ".join(prompt)
-        key = input(f'{prompt}: ').lower()
+        options = {
+            'n': MenuOption.NEW_GAME,
+            's': MenuOption.STATS,
+            'e': MenuOption.EXIT
+        }
+        key = input('[N]ew game, [S]tats, [E]xit: ').lower()
         return options.get(key, None)
 
     def get_input(self, turn: int):
