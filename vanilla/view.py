@@ -57,7 +57,7 @@ class View:
         )
 
     def histo(self, totals: dict, last: int):
-        """Turn wordle.stats distribution into a histogram."""
+        """Turn game_state.stats distribution into a histogram."""
 
         MAX_SIZE = 34
         output = ''
@@ -88,20 +88,20 @@ class View:
             alert = ''
         print(alert)
 
-    def update(self, wordle):
+    def update(self, game_state):
 
         # if error
-        if isinstance(wordle.alert, Error):
-            print(wordle.alert)
+        if isinstance(game_state.alert, Error):
+            print(game_state.alert)
         else:
-            self.draw_guesses(wordle)
-            self.draw_alert(str(wordle.alert))
-            self.draw_qwerty(wordle.qwerty)
+            self.draw_guesses(game_state)
+            self.draw_alert(str(game_state.alert))
+            self.draw_qwerty(game_state.qwerty)
 
-    def draw_guesses(self, wordle):
+    def draw_guesses(self, game_state):
         blank_row = [(' ', -1)] * 5  # -1 == LIGHT_GREY
-        turns = range(wordle.MAX_TURNS)
-        previous = wordle.previous_guesses
+        turns = range(game_state.MAX_TURNS)
+        previous = game_state.previous_guesses
 
         print('\n')
         for _, guess in zip_longest(turns, previous, fillvalue=blank_row):
