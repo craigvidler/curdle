@@ -40,7 +40,6 @@ class Wordle:
         self.guesses_file = 'data/valid_guesses.txt'
         self.valid_guesses = set(self.load_wordlist(self.guesses_file))
         self.previous_guesses = []  # record of submitted, scored guesses
-        self.current_guess = ''  # buffer for guess-in-progress before submit
 
         self.app_status = AppStatus.START
         self.MAX_TURNS = 6
@@ -91,11 +90,6 @@ class Wordle:
         """Return the current turn number, must not be > 6."""
         return min(len(self.previous_guesses) + 1, 6)
 
-    def add_letter(self, letter):
-        """Add a letter to current guess if valid to do so."""
-        if letter in ascii_letters and len(self.current_guess) < 5:
-            self.current_guess += letter.lower()
-
     def attach(self, observer):  # what type hint here?
         """Enable observer to add itself to the list."""
         self.observers.append(observer)
@@ -106,10 +100,6 @@ class Wordle:
             return Error.TOOSHORT
         elif guess not in self.valid_guesses:
             return Error.INVALID
-
-    def delete_letter(self):
-        """Delete a letter from current guess."""
-        self.current_guess = self.current_guess[:-1]
 
     def finish_turn(self, scored_guess: list):
         """
@@ -132,10 +122,9 @@ class Wordle:
             self.app_status = AppStatus.GAMEOVER
             response = self.answer.upper()
 
-        # in all cases: save guess, update tracker, reset current guess buffer
+        # in all cases: save guess, update tracker
         self.previous_guesses.append(scored_guess)
         self.update_tracker()
-        self.current_guess = ''
 
         return response
 
@@ -197,17 +186,11 @@ class Wordle:
 
         return scored_guess
 
-    def submit(self, guess=''):
+    def submit(self, guess: str):
         """
-        Validate guess or current_guess, score it, save it, update game,
-        create response if required.
+        Take in guesss then delegate: validate it, score it, save it, update
+        game, create response if required.
         """
-
-        # Default expectation is letter-by-letter submission via `add_letter
-        # ()` and `current_guess`(eg from a UI like curses), but this line
-        # and default parameter also support an override for UIs like the
-        # command line which are limited to submitting the whole guess only.
-        guess = guess or self.current_guess
 
         # check guess for errors
         if error := self.check_error(guess):
