@@ -1,4 +1,7 @@
 from curdle.config import AnsiCode as Code, SCORE_COLORS, Error, MenuOption
+import re
+
+APP_WIDTH = 42
 
 
 class View:
@@ -6,6 +9,11 @@ class View:
 
         # Observer pattern: model will call update() when state changed
         model.attach(self)
+
+    def center(self, line: str):
+        stripped = re.sub(r'\x1b.*?m', '', line)  # remove ANSI codes
+        left_spaces = ((APP_WIDTH - len(stripped)) // 2) * ' '
+        return left_spaces + line
 
     def colorize(self, scored_list: list):
         """expect a list of tuple pairs [(letter, score)…], return color version."""
@@ -49,13 +57,12 @@ class View:
 
         print('\n')
         for row in rows:
-            print('          ', self.colorize(row))
+            print(self.center(self.colorize(row)))
             print()
 
     def draw_alert(self, alert):
         if alert:
-            spaces = (38 // 2 - len(alert) // 2) * ' '
-            alert = f'{spaces}{Code.RED} {alert} {Code.RESET}'
+            alert = self.center(f'{Code.RED} {alert} {Code.RESET}')
         else:
             alert = ''
         print(alert)
@@ -63,8 +70,7 @@ class View:
     def draw_qwerty(self, qwerty):
         print()
         for i, row in enumerate(qwerty):
-            spaces = ('', '  ', '      ')
-            print(spaces[i], self.colorize(row))
+            print(self.center(self.colorize(row)))
             print()
 
     def stats(self, stats: dict):
@@ -88,7 +94,7 @@ class View:
     def histo(self, totals: dict, last: int):
         """Turn game_state.stats distribution into a histogram."""
 
-        MAX_SIZE = 34
+        MAX_SIZE = APP_WIDTH - 8
         output = ''
 
         # extract biggest value (ie most common score) upfront (other bars sized
