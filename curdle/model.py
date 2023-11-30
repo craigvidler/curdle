@@ -8,7 +8,7 @@ from collections import Counter
 from .config import AppStatus, Error, LetterScore, MenuOption, Rating
 from itertools import groupby
 from random import shuffle
-from string import ascii_letters, ascii_lowercase as a_to_z
+from string import ascii_lowercase as a_to_z
 
 
 class Menu:
@@ -77,10 +77,10 @@ class Wordle:
         distribution = {i: Counter(self.scores)[i] for i in range(1, 7)}
 
         return {
-            'played': played,
-            'wins': win_percent,
-            'current': streaks[-1],
-            'max': max(streaks),
+            'played': ('Played', played),
+            'wins': ('Win %', win_percent),
+            'current_streak': ('Current streak', streaks[-1]),
+            'max_streak': ('Max streak', max(streaks)),
             'distribution': distribution,
             'last': self.scores[-1] if self.scores else 0
         }
@@ -188,7 +188,7 @@ class Wordle:
 
     def submit(self, guess: str):
         """
-        Take in guesss then delegate: validate it, score it, save it, update
+        Take in guess then delegate: validate it, score it, save it, update
         game, create response if required.
         """
 

@@ -12,7 +12,10 @@ class View:
         model.attach(self)
 
     def center(self, line: str):
-        """Center a given string within the game board width."""
+        """
+        Center a given string within the game board width. ljust/rjust or
+        f-string padding won't work due to escape sequences.
+        """
         stripped = re.sub(r'\x1b.*?m', '', line)  # remove ANSI codes
         left_spaces = ((APP_WIDTH - len(stripped)) // 2) * ' '
         return left_spaces + line
@@ -81,23 +84,43 @@ class View:
             print(self.center(self.colorize(row)))
             print()
 
-    def stats(self, stats: dict):
-        """Print stats based on previous game scores."""
-        label_style = f'{Code.GREY}{Code.BLACK_TEXT}'
-        value_style = f'{Code.DARK_GREY}{Code.BOLD}{Code.WHITE_TEXT}'
+    def draw_stats(self, stats: dict):
+        """
+        Print stats based on previous game scores. The labels of the 4 stats
+        displayed in columns are dynamically padded to provide a flexible
+        layout for changing values. (NB In theory, will break if
+        `current_streak` (has the longest label) exceeds 3 digits.)
+        """
+
+        LEFT_COL = 15
+        RIGHT_COL = 21
+        PADDING = 4  # the 4 spaces between LABEL_STYLE and RESET below
+        LABEL_STYLE = f'{Code.GREY}{Code.BLACK_TEXT}'
+        VALUE_STYLE = f'{Code.DARK_GREY}{Code.BOLD}{Code.WHITE_TEXT}'
+        COL_SPACE = '  '
+        LINE_SPACE = '\n\n'
+
+        def style_stat(stat: tuple, col_width: int):
+            """
+            Pad label given col and value width, wrap label and value in
+            ANSI-coded styling.
+            """
+            label, value = stat
+            spaces = col_width - PADDING - len(str(value))
+            label = label.ljust(spaces)
+            end = COL_SPACE if col_width == LEFT_COL else LINE_SPACE
+
+            return f' {LABEL_STYLE} {label} {VALUE_STYLE} {value} {Code.RESET}{end}'
 
         print(
-            '\n\n'
-            f' {label_style} Played      '
-            f'{value_style} {stats["played"]} {Code.RESET}    '
-            f'{label_style} Current streak '
-            f'{value_style} {stats["current"]} {Code.RESET}\n\n'
-            f' {label_style} Win %     '
-            f'{value_style} {stats["wins"]} {Code.RESET}   '
-            f' {label_style} Max streak     '
-            f'{value_style} {stats["max"]} {Code.RESET}\n\n'
-            ' Guess distribution: \n\n'
-            f'{self.histo(stats["distribution"], stats["last"])}'
+            LINE_SPACE,
+            style_stat(stats['played'], LEFT_COL),
+            style_stat(stats['current_streak'], RIGHT_COL),
+            style_stat(stats['wins'], LEFT_COL),
+            style_stat(stats['max_streak'], RIGHT_COL),
+            f' Guess distribution: {LINE_SPACE}',
+            self.histo(stats['distribution'], stats['last']),
+            sep=''
         )
 
     def histo(self, totals: dict, last: int):
