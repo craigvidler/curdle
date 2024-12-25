@@ -132,7 +132,7 @@ class View:
         # extract biggest value (ie most common score) upfront (other bars sized
         # proportionally to it). Provide a default in case there's no non-zero
         # score yet (`max([])` causes error).
-        biggest = max([v for k, v in totals.items() if k > 0], default=1)
+        biggest = max([v for k, v in totals.items() if v > 0], default=1)
 
         # Draw each value as a bar sized relative to largest
         for k, v in totals.items():
