@@ -65,8 +65,9 @@ class View:
         self.guess = ''  # buffer holding guess-in-progress
 
         # windows and panels (improve magic numbers? shorten lines?)
+        # `self.width + 1` needed to fill width?!
         middle_x = self.width // 2
-        self.titlewin, self.titlepanel = self.create_panels(1, self.width + 1, 0, 0)  # needs + 1 to fill width?!
+        self.titlewin, self.titlepanel = self.create_panels(1, self.width + 1, 0, 0)
         self.guesseswin, self.guessespanel = self.create_panels(12, 19, 5, middle_x - 9)
         self.alertwin, self.alertpanel = self.create_panels(1, 21, 17, middle_x - 10)
         self.trackerwin, self.trackerpanel = self.create_panels(5, 39, 19, middle_x - 19)
@@ -170,7 +171,8 @@ class View:
     def draw_scored_guess(self, scored_guess, turn):
         for i, (letter, score) in enumerate(scored_guess):
             letter = f' {letter.upper()} '
-            self.guesseswin.addstr((turn - 1) * 2, i * 4, letter, Color.letter_colors[score])
+            self.guesseswin.addstr((turn - 1) * 2, i * 4, letter,
+                                   Color.letter_colors[score])
         self.guesseswin.refresh()
 
         # a scored guess means turn is over, reset guess buffer for next turn
@@ -260,7 +262,8 @@ class View:
             # if BACKSPACE (KEY_BACKSPACE Win/Lin; `\x7F` Mac; '\b' just in case)
             elif key in ('KEY_BACKSPACE', '\x7F', '\b') and self.guess:
                 self.guess = self.guess[:-1]
-                self.guesseswin.addstr((turn - 1) * 2, (length - 1) * 4, '   ', Color.BL_WHITE)
+                self.guesseswin.addstr((turn - 1) * 2, (length - 1)
+                                       * 4, '   ', Color.BL_WHITE)
 
             # if ENTER (should work cross-platform)
             elif key in ('\n', '\r'):
