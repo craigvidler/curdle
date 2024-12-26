@@ -1,3 +1,4 @@
+from .config import AppStatus
 from .model import Wordle  # Just for typehint below. Good practice?
 from .view import MenuOption  # Good practice?
 
@@ -32,7 +33,7 @@ class Controller:
         self.reset()
 
         # MAIN LOOP
-        while self.wordle.state == 'playing':
+        while self.wordle.app_status == AppStatus.PLAYING:
             # get the turn number before it's incremented by a valid guess
             turn = self.wordle.turn
 
@@ -58,6 +59,6 @@ class Controller:
             self.view.draw_tracker(self.wordle.tracker)
 
             # output message if solved or game over, enable menu
-            if self.wordle.state != 'playing':
+            if self.wordle.app_status != AppStatus.PLAYING:
                 self.view.alert(response, end_game=True)  # flag joins threads
                 self.menu(end_game=True)  # flag disables 0 to close menu
