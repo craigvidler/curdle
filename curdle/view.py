@@ -1,7 +1,7 @@
 from curses import panel
-from enum import IntEnum, auto
 from string import ascii_letters
 from threading import Timer
+from .config import MenuOption
 
 
 class Color:
@@ -42,16 +42,6 @@ class Color:
         cls.letter_colors = (
             cls.BL_LGREY, cls.WH_DGREY, cls.WH_YELLOW, cls.WH_GREEN
         )
-
-
-class MenuOption(IntEnum):
-    """Menu options. Provide int or string based on name as needed."""
-    NEW_GAME = auto()
-    STATS = auto()
-    EXIT = auto()
-
-    def __str__(self):
-        return self.name.replace('_', ' ')
 
 
 class View:
