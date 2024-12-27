@@ -1,5 +1,10 @@
-from curdle.config import AnsiCode as Code, SCORE_COLORS, Error, MenuOption
+import os
 import re
+from curdle.config import AnsiCode as Code, SCORE_COLORS, Error, MenuOption
+
+# Windows hack: needed to ensure ANSI codes are interpreted rather than
+# printed in Power Shell/Command Prompt
+os.system('')
 
 APP_WIDTH = 42
 
