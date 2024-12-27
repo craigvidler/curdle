@@ -1,9 +1,8 @@
 from .config import AppStatus, MenuOption
-from .model import Wordle  # Just for typehint below. Good practice?
 
 
 class Controller:
-    def __init__(self, view, wordle: Wordle):
+    def __init__(self, view, wordle):
         """Instantiate controller, set up view and model."""
 
         self.wordle = wordle
