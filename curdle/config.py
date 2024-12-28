@@ -31,6 +31,9 @@ class AppStatus(str, Enum):
     MENU = 'menu'
     STATS = 'stats'
 
+    def __str__(self):  # to simplify debug output
+        return self.name
+
 
 class Error(str, Enum):
     """
@@ -56,6 +59,9 @@ class LetterScore(IntEnum):
     PRESENT = 2
     CORRECT = 3
 
+    def __repr__(self):  # to simplify debug output
+        return str(self.value)
+
 
 class MenuOption(IntEnum):
     """Encode menu options. Provide int or label based on name as needed."""
@@ -78,6 +84,7 @@ class Rating(Enum):
 
     def __str__(self):
         return self.name.capitalize()
+
 
 # For vanilla app: a mapping of eg GREEN to 3 etc for letter scores. L GREY
 # (-1) for blanks.

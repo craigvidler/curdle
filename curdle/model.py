@@ -160,6 +160,9 @@ class Wordle:
         for observer in self.observers:
             observer.update(self)
 
+        # write current game state to file to aid debugging (with curses esp)
+        self.log()
+
     def score_guess(self, guess: str):
         """
         Take a guess and compare it with the answer to score it. Return a
@@ -211,3 +214,17 @@ class Wordle:
         """
         for letter, score in self.previous_guesses[-1]:
             self.tracker[letter] = max(self.tracker[letter], score)
+
+    def log(self):
+        """To aid debugging"""
+        with open('debug.log', 'w') as f:
+            f.write(str(self))
+
+    def __str__(self):
+        return \
+            f'App status: {self.app_status}\n' \
+            + f'\nAnswer: {self.answer}\n' \
+            + '\nPrevious guesses:\n' \
+            + '\n'.join(str(guess) for guess in self.previous_guesses) \
+            + '\n\nTracker:\n' \
+            + ' '.join(f'{k}:{v}' for k, v in self.tracker.items())
